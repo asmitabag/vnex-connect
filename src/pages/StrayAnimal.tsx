@@ -2,7 +2,14 @@
 import React, { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Upload, X, Send, AlertTriangle } from 'lucide-react';
+import { Camera, Upload, X, Send, AlertTriangle, Buildings } from 'lucide-react';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 // Interface for the animal report data
 interface AnimalReport {
@@ -13,6 +20,7 @@ interface AnimalReport {
   createdAt: string;
   status: 'pending' | 'in-progress' | 'resolved';
   sentToApollo: boolean;
+  campus: string;
 }
 
 const StrayAnimal = () => {
@@ -23,6 +31,7 @@ const StrayAnimal = () => {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [campus, setCampus] = useState('Chennai');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -108,6 +117,7 @@ const StrayAnimal = () => {
         createdAt: new Date().toISOString(),
         status: 'pending',
         sentToApollo: false,
+        campus: campus,
       };
       
       setReports(prevReports => [newReport, ...prevReports]);
@@ -122,6 +132,12 @@ const StrayAnimal = () => {
       toast({
         title: "Report submitted",
         description: "Your stray animal report has been submitted successfully!",
+      });
+
+      // Send notification to campus authorities automatically
+      toast({
+        title: "Notification sent",
+        description: `Your report has been sent to ${campus} campus authorities`,
       });
     }, 1500);
   };
@@ -146,8 +162,10 @@ const StrayAnimal = () => {
     );
     
     toast({
-      title: "Report sent",
-      description: "Your report has been sent to Apollo Hospital for assistance",
+      title: "Report sent to Apollo Hospital",
+      description: `Your report has been sent to Apollo Hospital in ${
+        reports.find(r => r.id === id)?.campus || "Chennai"
+      } for emergency care`,
       variant: "default",
     });
   };
@@ -164,6 +182,22 @@ const StrayAnimal = () => {
       {/* Reporting Form */}
       <div className="max-w-3xl mx-auto">
         <form onSubmit={handleSubmit} className="vnex-card space-y-4">
+          {/* Campus selection */}
+          <div>
+            <label className="vnex-label">Select Campus</label>
+            <Select value={campus} onValueChange={setCampus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select VIT Campus" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Chennai">VIT Chennai</SelectItem>
+                <SelectItem value="Vellore">VIT Vellore</SelectItem>
+                <SelectItem value="Bhopal">VIT Bhopal</SelectItem>
+                <SelectItem value="Amaravati">VIT Amaravati</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           {/* Location input */}
           <div>
             <label htmlFor="location" className="vnex-label">Location on Campus</label>
@@ -172,7 +206,7 @@ const StrayAnimal = () => {
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g., Near Block A, Outside Library, etc."
+              placeholder={`e.g., Near Block A, Outside Library, etc. in ${campus}`}
               className="vnex-input"
             />
           </div>
@@ -294,6 +328,10 @@ const StrayAnimal = () => {
                       <p className="text-sm text-gray-500">
                         {new Date(report.createdAt).toLocaleString()}
                       </p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Buildings className="w-4 h-4 text-primary-600" />
+                        <span className="font-medium">{report.campus}</span>
+                      </div>
                       <p className="font-medium mt-1">{report.location}</p>
                       <div className="mt-1 flex flex-wrap gap-2">
                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${

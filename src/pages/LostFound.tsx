@@ -1,463 +1,643 @@
 
-import React, { useState } from 'react';
-import { Plus, Search, MapPin, Calendar, User, MessageSquare } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Search, 
+  Plus, 
+  Calendar, 
+  MapPin, 
+  User, 
+  Phone, 
+  Buildings,
+  Trash2, 
+  Image as ImageIcon,
+  Upload,
+  X
+} from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface LostFoundItem {
   id: string;
+  type: "lost" | "found";
   title: string;
   description: string;
-  category: 'lost' | 'found';
+  category: string;
   location: string;
   date: string;
   contactName: string;
-  contactInfo: string;
+  contactNumber: string;
   imageUrl?: string;
-  status: 'open' | 'closed';
+  campus: string;
+  createdAt: string;
 }
 
 const LostFound = () => {
   const { toast } = useToast();
-  const [showForm, setShowForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'lost' | 'found'>('all');
+  const [items, setItems] = useState<LostFoundItem[]>([]);
+  const [activeTab, setActiveTab] = useState<"lost" | "found" | "browse">("browse");
+  const [selectedCampus, setSelectedCampus] = useState("Chennai");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   
-  const [items, setItems] = useState<LostFoundItem[]>([
-    {
-      id: '1',
-      title: 'Lost Black Wallet',
-      description: 'I lost my black leather wallet near the library. It has my ID card and some cash inside.',
-      category: 'lost',
-      location: 'University Library',
-      date: '2023-10-15',
-      contactName: 'Rishi Garg',
-      contactInfo: '9876543210',
-      imageUrl: 'https://images.unsplash.com/photo-1627843240167-b1f9411c4141?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHdhbGxldHxlbnwwfHwwfHx8MA%3D%3D',
-      status: 'open'
-    },
-    {
-      id: '2',
-      title: 'Found Water Bottle',
-      description: 'Found a blue hydro flask water bottle in the MGB block classroom 403.',
-      category: 'found',
-      location: 'MGB Block, Room 403',
-      date: '2023-10-17',
-      contactName: 'Asmita Bag',
-      contactInfo: '8765432109',
-      imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d2F0ZXIlMjBib3R0bGV8ZW58MHx8MHx8fDA%3D',
-      status: 'open'
-    },
-    {
-      id: '3',
-      title: 'Found Calculator',
-      description: 'Found a Texas Instruments scientific calculator in the TT Building.',
-      category: 'found',
-      location: 'Technology Tower',
-      date: '2023-10-12',
-      contactName: 'Trisha Singh',
-      contactInfo: '7654321098',
-      imageUrl: 'https://images.unsplash.com/photo-1574607383476-f517f260d30b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Y2FsY3VsYXRvcnxlbnwwfHwwfHx8MA%3D%3D',
-      status: 'open'
-    },
-    {
-      id: '4',
-      title: 'Lost Airpods',
-      description: 'I lost my Apple Airpods in a white case somewhere in the food court area.',
-      category: 'lost',
-      location: 'Food Court',
-      date: '2023-10-16',
-      contactName: 'Karan Jain',
-      contactInfo: '6543210987',
-      imageUrl: 'https://images.unsplash.com/photo-1588423771073-b8903fbb85b5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YWlycG9kc3xlbnwwfHwwfHx8MA%3D%3D',
-      status: 'closed'
-    }
-  ]);
+  // Form states
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [location, setLocation] = useState("");
+  const [date, setDate] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [newItem, setNewItem] = useState<Omit<LostFoundItem, 'id' | 'status'>>({
-    title: '',
-    description: '',
-    category: 'lost',
-    location: '',
-    date: new Date().toISOString().split('T')[0],
-    contactName: '',
-    contactInfo: '',
-    imageUrl: ''
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewItem({ ...newItem, [name]: value });
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewItem({ ...newItem, imageUrl: reader.result as string });
+      const selectedFile = e.target.files[0];
+      setImage(selectedFile);
+      
+      // Create preview URL
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        setPreviewUrl(fileReader.result as string);
       };
-      reader.readAsDataURL(file);
+      fileReader.readAsDataURL(selectedFile);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleSubmit = (e: React.FormEvent, type: "lost" | "found") => {
     e.preventDefault();
-    
-    // Validate
-    if (!newItem.title || !newItem.location || !newItem.contactName || !newItem.contactInfo) {
+
+    // Validate inputs
+    if (!title.trim() || !location.trim() || !category || !date || !contactName.trim() || !contactNumber.trim()) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
+        title: "Missing information",
+        description: "Please fill in all the required fields",
+        variant: "destructive",
       });
       return;
     }
-    
-    const createdItem: LostFoundItem = {
-      ...newItem,
-      id: Date.now().toString(),
-      status: 'open'
+
+    setIsSubmitting(true);
+
+    // Create a new item
+    const newItem: LostFoundItem = {
+      id: uuidv4(),
+      type,
+      title,
+      description,
+      category,
+      location,
+      date,
+      contactName,
+      contactNumber,
+      imageUrl: previewUrl || undefined,
+      campus: selectedCampus,
+      createdAt: new Date().toISOString(),
     };
-    
-    setItems([createdItem, ...items]);
-    setShowForm(false);
-    
+
+    setItems((prev) => [...prev, newItem]);
+
     // Reset form
-    setNewItem({
-      title: '',
-      description: '',
-      category: 'lost',
-      location: '',
-      date: new Date().toISOString().split('T')[0],
-      contactName: '',
-      contactInfo: '',
-      imageUrl: ''
-    });
-    
+    setTitle("");
+    setDescription("");
+    setCategory("");
+    setLocation("");
+    setDate("");
+    setContactName("");
+    setContactNumber("");
+    setImage(null);
+    setPreviewUrl(null);
+    setIsSubmitting(false);
+    setActiveTab("browse");
+
     toast({
       title: "Success",
-      description: `Your ${newItem.category} item report has been submitted.`,
+      description: `Your ${type} item has been posted!`,
     });
   };
 
-  const handleStatusToggle = (id: string) => {
-    setItems(
-      items.map(item => 
-        item.id === id 
-          ? { ...item, status: item.status === 'open' ? 'closed' : 'open' } 
-          : item
-      )
-    );
-    
-    const item = items.find(item => item.id === id);
+  const handleDelete = (id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
     toast({
-      title: item?.status === 'open' ? "Item Closed" : "Item Reopened",
-      description: `The status of "${item?.title}" has been updated.`,
+      title: "Deleted",
+      description: "Your listing has been removed",
     });
   };
 
-  // Filter items based on search and tab
-  const filteredItems = items
-    .filter(item => {
-      if (activeTab === 'all') return true;
-      return item.category === activeTab;
-    })
-    .filter(item => {
-      if (!searchTerm) return true;
-      return (
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    });
+  // Filter items based on selected campus and category
+  const filteredItems = items.filter(
+    (item) =>
+      item.campus === selectedCampus &&
+      (selectedCategory === "all" || item.category === selectedCategory)
+  );
+
+  const categories = [
+    { value: "electronics", label: "Electronics" },
+    { value: "documents", label: "Documents/ID Cards" },
+    { value: "accessories", label: "Accessories" },
+    { value: "clothing", label: "Clothing" },
+    { value: "books", label: "Books" },
+    { value: "other", label: "Other" },
+  ];
 
   return (
     <div className="vnex-container py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-gray-900">Lost & Found</h1>
-        
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="vnex-button-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          <span>{showForm ? 'Cancel' : 'Report Item'}</span>
-        </button>
-      </div>
+      <h1 className="vnex-heading">Lost & Found</h1>
+      <p className="text-gray-600 text-center max-w-3xl mx-auto mb-8">
+        Lost something? Found something? Use this platform to post about lost or found items and 
+        help connect items with their owners.
+      </p>
 
-      {showForm && (
-        <div className="mb-8 vnex-card animate-fade-in">
-          <h2 className="text-xl font-semibold mb-4">Report an Item</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="vnex-label">Item Type*</label>
-                <select 
-                  name="category" 
-                  value={newItem.category}
-                  onChange={handleInputChange}
-                  className="vnex-input"
-                  required
-                >
-                  <option value="lost">Lost Item</option>
-                  <option value="found">Found Item</option>
-                </select>
+      <div className="max-w-4xl mx-auto">
+        <Tabs defaultValue="browse" value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+          <TabsList className="grid grid-cols-3 mb-6">
+            <TabsTrigger value="browse">Browse Items</TabsTrigger>
+            <TabsTrigger value="lost">Report Lost Item</TabsTrigger>
+            <TabsTrigger value="found">Report Found Item</TabsTrigger>
+          </TabsList>
+
+          {/* Browse Tab */}
+          <TabsContent value="browse">
+            <div className="vnex-card mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="vnex-label">Select Campus</label>
+                  <Select value={selectedCampus} onValueChange={setSelectedCampus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select campus" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Chennai">VIT Chennai</SelectItem>
+                      <SelectItem value="Vellore">VIT Vellore</SelectItem>
+                      <SelectItem value="Bhopal">VIT Bhopal</SelectItem>
+                      <SelectItem value="Amaravati">VIT Amaravati</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="vnex-label">Filter by Category</label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              
+            </div>
+
+            {filteredItems.length === 0 ? (
+              <div className="text-center py-12 vnex-card">
+                <Search className="w-12 h-12 mx-auto text-gray-400" />
+                <p className="mt-4 text-gray-600">No items found. Be the first to post!</p>
+                <div className="mt-6 flex justify-center gap-4">
+                  <Button onClick={() => setActiveTab("lost")}>Report Lost Item</Button>
+                  <Button onClick={() => setActiveTab("found")}>Report Found Item</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`vnex-card ${
+                      item.type === "lost" ? "border-l-4 border-l-red-500" : "border-l-4 border-l-green-500"
+                    }`}
+                  >
+                    <div className="flex flex-col md:flex-row gap-4">
+                      {item.imageUrl && (
+                        <div className="md:w-1/4">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-full h-32 object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                      <div className={`${item.imageUrl ? "md:w-3/4" : "w-full"}`}>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`inline-block px-2 py-1 text-xs rounded-full ${
+                                  item.type === "lost" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
+                                }`}
+                              >
+                                {item.type === "lost" ? "Lost" : "Found"}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {new Date(item.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <h3 className="font-semibold text-lg mt-1">{item.title}</h3>
+                          </div>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center text-sm text-gray-600 mt-1">
+                          <Buildings className="w-4 h-4 mr-1" />
+                          <span>{item.campus} Campus</span>
+                        </div>
+
+                        {item.description && (
+                          <p className="text-gray-700 mt-2">{item.description}</p>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            <span>{item.location}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            <span>{new Date(item.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <User className="w-4 h-4 mr-1" />
+                            <span>{item.contactName}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Phone className="w-4 h-4 mr-1" />
+                            <span>{item.contactNumber}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Lost Item Form */}
+          <TabsContent value="lost">
+            <form onSubmit={(e) => handleSubmit(e, "lost")} className="vnex-card space-y-4">
+              <h2 className="text-xl font-semibold mb-2">Report a Lost Item</h2>
+
+              {/* Campus selection */}
               <div>
-                <label className="vnex-label">Item Name*</label>
-                <input 
-                  type="text"
-                  name="title"
-                  value={newItem.title}
-                  onChange={handleInputChange}
-                  placeholder="e.g. Black Wallet, Blue Backpack"
-                  className="vnex-input"
-                  required
+                <label className="vnex-label">VIT Campus</label>
+                <Select value={selectedCampus} onValueChange={setSelectedCampus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select campus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Chennai">VIT Chennai</SelectItem>
+                    <SelectItem value="Vellore">VIT Vellore</SelectItem>
+                    <SelectItem value="Bhopal">VIT Bhopal</SelectItem>
+                    <SelectItem value="Amaravati">VIT Amaravati</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Item Title */}
+              <div>
+                <label htmlFor="title" className="vnex-label">Item Name</label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="What did you lose?"
                 />
               </div>
 
+              {/* Category */}
               <div>
-                <label className="vnex-label">Location*</label>
-                <input 
-                  type="text"
-                  name="location"
-                  value={newItem.location}
-                  onChange={handleInputChange}
-                  placeholder="Where lost/found?"
-                  className="vnex-input"
-                  required
+                <label htmlFor="category" className="vnex-label">Category</label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="description" className="vnex-label">Description</label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe the item in detail (color, brand, etc.)"
+                  rows={3}
                 />
               </div>
-              
+
+              {/* Location */}
               <div>
-                <label className="vnex-label">Date*</label>
-                <input 
+                <label htmlFor="location" className="vnex-label">Last Seen Location</label>
+                <Input
+                  id="location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Where did you last see it?"
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label htmlFor="date" className="vnex-label">Date Lost</label>
+                <Input
+                  id="date"
                   type="date"
-                  name="date"
-                  value={newItem.date}
-                  onChange={handleInputChange}
-                  className="vnex-input"
-                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  max={new Date().toISOString().split("T")[0]}
                 />
               </div>
-              
+
+              {/* Image upload */}
               <div>
-                <label className="vnex-label">Your Name*</label>
-                <input 
-                  type="text"
-                  name="contactName"
-                  value={newItem.contactName}
-                  onChange={handleInputChange}
-                  placeholder="Your full name"
-                  className="vnex-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="vnex-label">Contact Number*</label>
-                <input 
-                  type="text"
-                  name="contactInfo"
-                  value={newItem.contactInfo}
-                  onChange={handleInputChange}
-                  placeholder="Your phone number"
-                  className="vnex-input"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="vnex-label">Description</label>
-              <textarea 
-                name="description"
-                value={newItem.description}
-                onChange={handleInputChange}
-                placeholder="Describe the item in detail"
-                className="vnex-input"
-                rows={3}
-              />
-            </div>
-            
-            <div>
-              <label className="vnex-label">Upload Image</label>
-              <input 
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-primary-50 file:text-primary-700
-                  hover:file:bg-primary-100"
-              />
-              {newItem.imageUrl && (
+                <label className="vnex-label">Upload Image (Optional)</label>
                 <div className="mt-2">
-                  <img 
-                    src={newItem.imageUrl} 
-                    alt="Preview" 
-                    className="h-32 w-auto rounded-md object-cover"
+                  {previewUrl ? (
+                    <div className="relative w-full max-w-md">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview" 
+                        className="w-full h-48 object-cover rounded-md shadow-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={triggerFileInput}
+                        className="flex items-center"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="contactName" className="vnex-label">Your Name</label>
+                  <Input
+                    id="contactName"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    placeholder="Enter your name"
                   />
                 </div>
-              )}
-            </div>
-            
-            <div className="flex justify-end">
-              <button type="submit" className="vnex-button-primary">
-                Submit Report
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="mb-6 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
-          <div className="inline-flex rounded-md shadow-sm" role="group">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                activeTab === 'all'
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
-              } border`}
-            >
-              All Items
-            </button>
-            <button
-              onClick={() => setActiveTab('lost')}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === 'lost'
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
-              } border-t border-b border-r`}
-            >
-              Lost Items
-            </button>
-            <button
-              onClick={() => setActiveTab('found')}
-              className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
-                activeTab === 'found'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
-              } border-t border-b border-r`}
-            >
-              Found Items
-            </button>
-          </div>
-          
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search items..."
-              className="pl-10 vnex-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {filteredItems.length === 0 ? (
-          <div className="vnex-card text-center py-8">
-            <p className="text-gray-500">No items found. Be the first to report an item!</p>
-          </div>
-        ) : (
-          filteredItems.map((item) => (
-            <div 
-              key={item.id} 
-              className={`vnex-card hover:shadow-lg transition-all ${
-                item.status === 'closed' ? 'opacity-75' : ''
-              }`}
-            >
-              <div className="flex flex-col md:flex-row gap-4">
-                {item.imageUrl && (
-                  <div className="w-full md:w-1/4">
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.title} 
-                      className="w-full h-40 md:h-full object-cover rounded-md"
-                    />
-                  </div>
-                )}
-                
-                <div className={`flex-1 ${!item.imageUrl ? 'w-full' : 'md:w-3/4'}`}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span 
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            item.category === 'lost' 
-                              ? 'bg-red-100 text-red-800' 
-                              : 'bg-green-100 text-green-800'
-                          }`}
-                        >
-                          {item.category === 'lost' ? 'Lost' : 'Found'}
-                        </span>
-                        
-                        <span 
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            item.status === 'open'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {item.status === 'open' ? 'Open' : 'Closed'}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-lg font-semibold mt-2">{item.title}</h3>
-                    </div>
-                    
-                    <button
-                      onClick={() => handleStatusToggle(item.id)}
-                      className={`px-3 py-1 text-sm rounded ${
-                        item.status === 'open'
-                          ? 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-                          : 'bg-blue-100 hover:bg-blue-200 text-blue-800'
-                      }`}
-                    >
-                      {item.status === 'open' ? 'Mark as Closed' : 'Reopen'}
-                    </button>
-                  </div>
-                  
-                  <p className="text-gray-600 mt-2">
-                    {item.description}
-                  </p>
-                  
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{item.location}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm">{new Date(item.date).toLocaleDateString()}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <User className="w-4 h-4" />
-                      <span className="text-sm">{item.contactName}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MessageSquare className="w-4 h-4" />
-                      <span className="text-sm">{item.contactInfo}</span>
-                    </div>
-                  </div>
+                <div>
+                  <label htmlFor="contactNumber" className="vnex-label">Contact Number</label>
+                  <Input
+                    id="contactNumber"
+                    value={contactNumber}
+                    onChange={(e) => setContactNumber(e.target.value)}
+                    placeholder="Enter your contact number"
+                  />
                 </div>
               </div>
-            </div>
-          ))
-        )}
+
+              {/* Submit Button */}
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setActiveTab("browse")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit Report"}
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+
+          {/* Found Item Form */}
+          <TabsContent value="found">
+            <form onSubmit={(e) => handleSubmit(e, "found")} className="vnex-card space-y-4">
+              <h2 className="text-xl font-semibold mb-2">Report a Found Item</h2>
+
+              {/* Campus selection */}
+              <div>
+                <label className="vnex-label">VIT Campus</label>
+                <Select value={selectedCampus} onValueChange={setSelectedCampus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select campus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Chennai">VIT Chennai</SelectItem>
+                    <SelectItem value="Vellore">VIT Vellore</SelectItem>
+                    <SelectItem value="Bhopal">VIT Bhopal</SelectItem>
+                    <SelectItem value="Amaravati">VIT Amaravati</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Item Title */}
+              <div>
+                <label htmlFor="title-found" className="vnex-label">Item Name</label>
+                <Input
+                  id="title-found"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="What did you find?"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label htmlFor="category-found" className="vnex-label">Category</label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="description-found" className="vnex-label">Description</label>
+                <Textarea
+                  id="description-found"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe the item in detail (color, brand, etc.)"
+                  rows={3}
+                />
+              </div>
+
+              {/* Location */}
+              <div>
+                <label htmlFor="location-found" className="vnex-label">Found Location</label>
+                <Input
+                  id="location-found"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Where did you find it?"
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label htmlFor="date-found" className="vnex-label">Date Found</label>
+                <Input
+                  id="date-found"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  max={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+
+              {/* Image upload */}
+              <div>
+                <label className="vnex-label">Upload Image (Optional)</label>
+                <div className="mt-2">
+                  {previewUrl ? (
+                    <div className="relative w-full max-w-md">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview" 
+                        className="w-full h-48 object-cover rounded-md shadow-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={triggerFileInput}
+                        className="flex items-center"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="contactName-found" className="vnex-label">Your Name</label>
+                  <Input
+                    id="contactName-found"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    placeholder="Enter your name"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="contactNumber-found" className="vnex-label">Contact Number</label>
+                  <Input
+                    id="contactNumber-found"
+                    value={contactNumber}
+                    onChange={(e) => setContactNumber(e.target.value)}
+                    placeholder="Enter your contact number"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setActiveTab("browse")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit Report"}
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

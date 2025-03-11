@@ -1,452 +1,294 @@
 
-import React, { useState } from 'react';
-import { MapPin, Calendar, Clock, User, Phone, ChevronDown, ChevronUp, Search, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from "uuid";
+import { 
+  Car, 
+  Plus, 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  User, 
+  Phone, 
+  Buildings,
+  Trash2 
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-interface TripRequest {
+interface CabShare {
   id: string;
-  from: string;
-  to: string;
+  name: string;
+  contact: string;
+  destination: string;
   date: string;
   time: string;
-  name: string;
-  contactNumber: string;
-  totalSeats: number;
-  availableSeats: number;
-  notes?: string;
+  capacity: number;
+  campus: string;
   createdAt: string;
 }
 
 const CabPartner = () => {
   const { toast } = useToast();
-  const [showForm, setShowForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState<Omit<TripRequest, 'id' | 'createdAt'>>({
-    from: '',
-    to: '',
-    date: new Date().toISOString().split('T')[0],
-    time: '',
-    name: '',
-    contactNumber: '',
-    totalSeats: 4,
-    availableSeats: 3,
-    notes: ''
-  });
-
-  const [trips, setTrips] = useState<TripRequest[]>([
-    {
-      id: '1',
-      from: 'VIT Main Gate',
-      to: 'Chennai Airport',
-      date: '2023-10-25',
-      time: '14:00',
-      name: 'Rishi Garg',
-      contactNumber: '9876543210',
-      totalSeats: 4,
-      availableSeats: 2,
-      notes: 'Will be leaving at 2 PM sharp. Fare will be split equally.',
-      createdAt: '2023-10-20T10:30:00Z'
-    },
-    {
-      id: '2',
-      from: 'Chennai Central',
-      to: 'VIT Campus',
-      date: '2023-10-26',
-      time: '09:30',
-      name: 'Asmita Bag',
-      contactNumber: '8765432109',
-      totalSeats: 4,
-      availableSeats: 3,
-      createdAt: '2023-10-20T11:45:00Z'
-    },
-    {
-      id: '3',
-      from: 'VIT Campus',
-      to: 'Vellore Bus Stand',
-      date: '2023-10-24',
-      time: '18:00',
-      name: 'Naman Sharma',
-      contactNumber: '7654321098',
-      totalSeats: 4,
-      availableSeats: 1,
-      notes: 'Will be sharing Uber. Payment through UPI.',
-      createdAt: '2023-10-19T15:20:00Z'
-    },
-    {
-      id: '4',
-      from: 'Katpadi Railway Station',
-      to: 'VIT Campus',
-      date: '2023-10-23',
-      time: '21:30',
-      name: 'Trisha Singh',
-      contactNumber: '6543210987',
-      totalSeats: 4,
-      availableSeats: 2,
-      createdAt: '2023-10-19T09:15:00Z'
-    }
-  ]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === 'totalSeats' || name === 'availableSeats' ? parseInt(value) : value
-    });
-  };
+  const [cabShares, setCabShares] = useState<CabShare[]>([]);
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [destination, setDestination] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [capacity, setCapacity] = useState("1");
+  const [campus, setCampus] = useState("Chennai");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate
-    if (!formData.from || !formData.to || !formData.date || !formData.time || !formData.name || !formData.contactNumber) {
+
+    // Validate inputs
+    if (!name.trim() || !contact.trim() || !destination.trim() || !date || !time) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
+        title: "Missing information",
+        description: "Please fill in all the required fields",
+        variant: "destructive",
       });
       return;
     }
-    
-    if (formData.availableSeats >= formData.totalSeats) {
-      toast({
-        title: "Error",
-        description: "Available seats must be less than total seats",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const newTrip: TripRequest = {
-      ...formData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
+
+    setIsSubmitting(true);
+
+    // Create a new cab share entry
+    const newCabShare: CabShare = {
+      id: uuidv4(),
+      name,
+      contact,
+      destination,
+      date,
+      time,
+      capacity: parseInt(capacity),
+      campus,
+      createdAt: new Date().toISOString(),
     };
-    
-    setTrips([newTrip, ...trips]);
-    setShowForm(false);
-    
+
+    setCabShares((prev) => [...prev, newCabShare]);
+
     // Reset form
-    setFormData({
-      from: '',
-      to: '',
-      date: new Date().toISOString().split('T')[0],
-      time: '',
-      name: '',
-      contactNumber: '',
-      totalSeats: 4,
-      availableSeats: 3,
-      notes: ''
-    });
-    
+    setName("");
+    setContact("");
+    setDestination("");
+    setDate("");
+    setTime("");
+    setCapacity("1");
+    setIsSubmitting(false);
+
     toast({
       title: "Success",
-      description: "Your trip has been posted successfully!",
+      description: "Your cab sharing request has been posted!",
     });
   };
 
-  const handleJoinTrip = (id: string) => {
-    setTrips(
-      trips.map(trip => 
-        trip.id === id && trip.availableSeats > 0
-          ? { ...trip, availableSeats: trip.availableSeats - 1 }
-          : trip
-      )
-    );
-    
-    const trip = trips.find(t => t.id === id);
-    if (trip && trip.availableSeats > 0) {
-      toast({
-        title: "Request Sent",
-        description: `Your request to join the trip to ${trip.to} has been sent to ${trip.name}. They will contact you shortly.`,
-      });
-    }
+  const handleDelete = (id: string) => {
+    setCabShares((prev) => prev.filter((share) => share.id !== id));
+    toast({
+      title: "Deleted",
+      description: "Your cab sharing request has been removed",
+    });
   };
 
-  // Filter trips based on search term
-  const filteredTrips = trips.filter(trip => {
-    if (!searchTerm) return true;
-    return (
-      trip.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (trip.notes && trip.notes.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  });
-
-  // Sort trips by date (upcoming first)
-  const sortedTrips = [...filteredTrips].sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time}`).getTime();
-    const dateB = new Date(`${b.date}T${b.time}`).getTime();
-    return dateA - dateB;
+  // Sort cab shares by date (ascending)
+  const sortedCabShares = [...cabShares].sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.time}`);
+    const dateB = new Date(`${b.date}T${b.time}`);
+    return dateA.getTime() - dateB.getTime();
   });
 
   return (
     <div className="vnex-container py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Cab Partner</h1>
-        
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="vnex-button-primary flex items-center gap-2"
-        >
-          {showForm ? (
-            <>
-              <ChevronUp className="w-5 h-5" />
-              <span>Cancel</span>
-            </>
-          ) : (
-            <>
-              <Users className="w-5 h-5" />
-              <span>Post a Trip</span>
-            </>
-          )}
-        </button>
-      </div>
+      <h1 className="vnex-heading">Cab Partner Finder</h1>
+      <p className="text-gray-600 text-center max-w-3xl mx-auto mb-8">
+        Find cab sharing partners for airport/railway station trips and reduce your travel costs.
+        Post your trip details and connect with others traveling on the same day.
+      </p>
 
-      {showForm && (
-        <div className="mb-8 vnex-card animate-fade-in">
-          <h2 className="text-xl font-semibold mb-4">Post a Trip</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="vnex-label">From*</label>
-                <input 
-                  type="text"
-                  name="from"
-                  value={formData.from}
-                  onChange={handleInputChange}
-                  placeholder="Starting point"
-                  className="vnex-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="vnex-label">To*</label>
-                <input 
-                  type="text"
-                  name="to"
-                  value={formData.to}
-                  onChange={handleInputChange}
-                  placeholder="Destination"
-                  className="vnex-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="vnex-label">Date*</label>
-                <input 
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                  className="vnex-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="vnex-label">Time*</label>
-                <input 
-                  type="time"
-                  name="time"
-                  value={formData.time}
-                  onChange={handleInputChange}
-                  className="vnex-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="vnex-label">Your Name*</label>
-                <input 
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Your full name"
-                  className="vnex-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="vnex-label">Contact Number*</label>
-                <input 
-                  type="tel"
-                  name="contactNumber"
-                  value={formData.contactNumber}
-                  onChange={handleInputChange}
-                  placeholder="Your phone number"
-                  className="vnex-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="vnex-label">Total Seats</label>
-                <select
-                  name="totalSeats"
-                  value={formData.totalSeats}
-                  onChange={handleInputChange}
-                  className="vnex-input"
-                >
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
-                  <option value={6}>6</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="vnex-label">Available Seats</label>
-                <select
-                  name="availableSeats"
-                  value={formData.availableSeats}
-                  onChange={handleInputChange}
-                  className="vnex-input"
-                >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
-                </select>
-              </div>
-            </div>
-            
-            <div>
-              <label className="vnex-label">Additional Notes</label>
-              <textarea 
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="Any additional information about the trip"
-                className="vnex-input"
-                rows={3}
-              />
-            </div>
-            
-            <div className="flex justify-end">
-              <button type="submit" className="vnex-button-primary">
-                Post Trip
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <div className="max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {/* Form Section */}
+          <div className="md:col-span-2">
+            <form onSubmit={handleSubmit} className="vnex-card space-y-4">
+              <h2 className="text-xl font-semibold mb-2">Post a Cab Share</h2>
 
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search by location or name..."
-            className="pl-10 vnex-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+              {/* Campus selection */}
+              <div>
+                <label className="vnex-label">VIT Campus</label>
+                <Select value={campus} onValueChange={setCampus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select campus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Chennai">VIT Chennai</SelectItem>
+                    <SelectItem value="Vellore">VIT Vellore</SelectItem>
+                    <SelectItem value="Bhopal">VIT Bhopal</SelectItem>
+                    <SelectItem value="Amaravati">VIT Amaravati</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      <div className="space-y-4">
-        {sortedTrips.length === 0 ? (
-          <div className="vnex-card text-center py-8">
-            <p className="text-gray-500">No trips found. Be the first to post a trip!</p>
-          </div>
-        ) : (
-          sortedTrips.map((trip) => (
-            <div key={trip.id} className="vnex-card hover:shadow-lg transition-all">
-              <div className="flex flex-col md:flex-row justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <div className="rounded-full bg-primary-100 p-1.5">
-                      <MapPin className="h-5 w-5 text-primary-700" />
-                    </div>
-                    <div className="ml-2 flex items-center">
-                      <span className="font-medium">{trip.from}</span>
-                      <span className="mx-2 text-gray-400">→</span>
-                      <span className="font-medium">{trip.to}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <span>{formatDate(trip.date)}</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span>{formatTime(trip.time)}</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 mr-2" />
-                      <span>{trip.name}</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Phone className="h-4 w-4 mr-2" />
-                      <span>{trip.contactNumber}</span>
-                    </div>
-                  </div>
-                  
-                  {trip.notes && (
-                    <div className="mb-4 text-gray-600 text-sm border-l-2 border-gray-200 pl-3">
-                      {trip.notes}
-                    </div>
-                  )}
+              {/* Name */}
+              <div>
+                <label htmlFor="name" className="vnex-label">Your Name</label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                />
+              </div>
+
+              {/* Contact */}
+              <div>
+                <label htmlFor="contact" className="vnex-label">Contact Number</label>
+                <Input
+                  id="contact"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="Enter your contact number"
+                />
+              </div>
+
+              {/* Destination */}
+              <div>
+                <label htmlFor="destination" className="vnex-label">Destination</label>
+                <Input
+                  id="destination"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="e.g., Airport, Railway Station, etc."
+                />
+              </div>
+
+              {/* Date and Time */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="date" className="vnex-label">Date</label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
                 </div>
-                
-                <div className="flex flex-col justify-between items-end mt-4 md:mt-0 md:ml-4">
-                  <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full">
-                    <Users className="h-4 w-4 mr-1.5 text-gray-600" />
-                    <span className="text-sm font-medium">
-                      {trip.availableSeats} / {trip.totalSeats} seats available
-                    </span>
-                  </div>
-                  
-                  <button
-                    onClick={() => handleJoinTrip(trip.id)}
-                    disabled={trip.availableSeats === 0}
-                    className={`mt-4 px-4 py-2 rounded-md font-medium transition-colors ${
-                      trip.availableSeats > 0
-                        ? 'bg-primary-600 text-white hover:bg-primary-700'
-                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {trip.availableSeats > 0 ? 'Join Trip' : 'No Seats Available'}
-                  </button>
+                <div>
+                  <label htmlFor="time" className="vnex-label">Time</label>
+                  <Input
+                    id="time"
+                    type="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  />
                 </div>
               </div>
+
+              {/* Capacity */}
+              <div>
+                <label htmlFor="capacity" className="vnex-label">Number of People</label>
+                <Select value={capacity} onValueChange={setCapacity}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select capacity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Person</SelectItem>
+                    <SelectItem value="2">2 People</SelectItem>
+                    <SelectItem value="3">3 People</SelectItem>
+                    <SelectItem value="4">4 People</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Posting..." : "Post Cab Share"}
+              </Button>
+            </form>
+          </div>
+
+          {/* Listings Section */}
+          <div className="md:col-span-3">
+            <div className="vnex-card">
+              <h2 className="text-xl font-semibold mb-4">Available Cab Shares</h2>
+              
+              {sortedCabShares.length === 0 ? (
+                <div className="text-center py-8">
+                  <Car className="w-12 h-12 mx-auto text-gray-400" />
+                  <p className="mt-2 text-gray-500">No cab shares available yet. Be the first to post!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {sortedCabShares.map((share) => (
+                    <div
+                      key={share.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
+                    >
+                      <div className="flex justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Buildings className="w-4 h-4 text-primary-600" />
+                            <span className="text-sm font-medium">{share.campus}</span>
+                          </div>
+                          <h3 className="font-medium mt-1">{share.destination}</h3>
+                        </div>
+                        <button
+                          onClick={() => handleDelete(share.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                          title="Delete listing"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          <span>{new Date(share.date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Clock className="w-4 h-4 mr-1" />
+                          <span>{share.time}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <User className="w-4 h-4 mr-1" />
+                          <span>{share.name}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Phone className="w-4 h-4 mr-1" />
+                          <span>{share.contact}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2 text-sm">
+                        <span className="bg-primary-50 text-primary-700 px-2 py-1 rounded-full">
+                          {share.capacity} {share.capacity === 1 ? "person" : "people"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ))
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    weekday: 'short',
-    month: 'short', 
-    day: 'numeric' 
-  });
-}
-
-function formatTime(timeString: string): string {
-  const [hours, minutes] = timeString.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 || 12;
-  return `${hour12}:${minutes} ${ampm}`;
-}
 
 export default CabPartner;
