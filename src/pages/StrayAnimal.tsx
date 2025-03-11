@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Upload, X } from 'lucide-react';
+import { Camera, Upload, X, Send, AlertTriangle } from 'lucide-react';
 
 // Interface for the animal report data
 interface AnimalReport {
@@ -12,6 +12,7 @@ interface AnimalReport {
   imageUrl: string;
   createdAt: string;
   status: 'pending' | 'in-progress' | 'resolved';
+  sentToApollo: boolean;
 }
 
 const StrayAnimal = () => {
@@ -106,6 +107,7 @@ const StrayAnimal = () => {
         imageUrl: previewUrl || '',
         createdAt: new Date().toISOString(),
         status: 'pending',
+        sentToApollo: false,
       };
       
       setReports(prevReports => [newReport, ...prevReports]);
@@ -133,12 +135,30 @@ const StrayAnimal = () => {
     });
   };
 
+  // Send report to Apollo Hospital
+  const sendToApollo = (id: string) => {
+    setReports(prevReports => 
+      prevReports.map(report => 
+        report.id === id 
+          ? { ...report, sentToApollo: true } 
+          : report
+      )
+    );
+    
+    toast({
+      title: "Report sent",
+      description: "Your report has been sent to Apollo Hospital for assistance",
+      variant: "default",
+    });
+  };
+
   return (
     <div className="vnex-container py-8">
       <h1 className="vnex-heading">Stray Animal Reporting</h1>
       <p className="text-gray-600 text-center max-w-3xl mx-auto mb-8">
         Help injured or malnourished stray animals on campus by reporting them with photos. 
-        Your reports will be sent to campus authorities who can take appropriate action.
+        Your reports will be sent to campus authorities who can take appropriate action. 
+        Critical cases can be forwarded to Apollo Hospital for emergency care.
       </p>
       
       {/* Reporting Form */}
@@ -275,7 +295,7 @@ const StrayAnimal = () => {
                         {new Date(report.createdAt).toLocaleString()}
                       </p>
                       <p className="font-medium mt-1">{report.location}</p>
-                      <div className="mt-1">
+                      <div className="mt-1 flex flex-wrap gap-2">
                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${
                           report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                           report.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
@@ -283,17 +303,41 @@ const StrayAnimal = () => {
                         }`}>
                           {report.status.charAt(0).toUpperCase() + report.status.slice(1).replace('-', ' ')}
                         </span>
+                        
+                        {report.sentToApollo && (
+                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                            Sent to Apollo
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDelete(report.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                      title="Delete Report"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                    <div className="flex">
+                      {!report.sentToApollo && (
+                        <button
+                          onClick={() => sendToApollo(report.id)}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-full transition-colors mr-2"
+                          title="Send to Apollo Hospital"
+                        >
+                          <Send className="w-5 h-5" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(report.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                        title="Delete Report"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-gray-700 mt-2 flex-grow">{report.description}</p>
+                  
+                  {!report.sentToApollo && (
+                    <div className="mt-3 flex items-center text-amber-600 text-sm">
+                      <AlertTriangle className="w-4 h-4 mr-1" />
+                      <span>For critical cases, send this report to Apollo Hospital</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

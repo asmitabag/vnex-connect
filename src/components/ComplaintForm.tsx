@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { validateComplaintForm, validateMessComplaintForm } from '@/utils/validators';
+import { Camera, Upload, X } from 'lucide-react';
 
 interface ComplaintFormValues {
   regNo: string;
@@ -11,6 +12,7 @@ interface ComplaintFormValues {
   description: string;
   mess?: string;
   mealType?: string;
+  imageUrl?: string | null;
 }
 
 interface ComplaintFormProps {
@@ -28,10 +30,15 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ type, onSubmit }) => {
     description: '',
     mess: type === 'mess' ? 'SRRC' : undefined,
     mealType: type === 'mess' ? 'Veg' : undefined,
+    imageUrl: null,
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -40,6 +47,45 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ type, onSubmit }) => {
     if (errors[name]) {
       setErrors({ ...errors, [name]: '' });
     }
+  };
+
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setImage(selectedFile);
+      
+      // Create preview URL
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        setPreviewUrl(fileReader.result as string);
+        setValues({ ...values, imageUrl: fileReader.result as string });
+      };
+      fileReader.readAsDataURL(selectedFile);
+    }
+  };
+
+  // Open file dialog
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Open camera
+  const triggerCameraInput = () => {
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+
+  // Remove selected image
+  const removeImage = () => {
+    setImage(null);
+    setPreviewUrl(null);
+    setValues({ ...values, imageUrl: null });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,8 +121,11 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ type, onSubmit }) => {
         description: '',
         mess: type === 'mess' ? 'SRRC' : undefined,
         mealType: type === 'mess' ? 'Veg' : undefined,
+        imageUrl: null,
       });
       
+      setImage(null);
+      setPreviewUrl(null);
       setIsSubmitting(false);
       
       toast({
@@ -194,6 +243,63 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ type, onSubmit }) => {
           className={`vnex-input ${errors.description ? 'border-red-500' : ''}`}
         />
         {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+      </div>
+      
+      {/* Image upload section */}
+      <div>
+        <label className="vnex-label">Upload Image (Optional)</label>
+        <div className="mt-2 flex flex-col items-center">
+          {previewUrl ? (
+            <div className="relative w-full max-w-md">
+              <img 
+                src={previewUrl} 
+                alt="Preview" 
+                className="w-full h-64 object-cover rounded-md shadow-md"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            <div className="w-full flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+              <input
+                type="file"
+                ref={cameraInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={triggerFileInput}
+                className="vnex-button-secondary flex items-center justify-center gap-2"
+              >
+                <Upload className="w-5 h-5" />
+                <span>Upload Photo</span>
+              </button>
+              <button
+                type="button"
+                onClick={triggerCameraInput}
+                className="vnex-button-secondary flex items-center justify-center gap-2"
+              >
+                <Camera className="w-5 h-5" />
+                <span>Take Photo</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="flex justify-end">

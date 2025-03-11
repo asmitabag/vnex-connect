@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Trash2 } from 'lucide-react';
+import { Check, Trash2, Image as ImageIcon } from 'lucide-react';
 
 export interface ComplaintData {
   id: string;
@@ -13,6 +13,7 @@ export interface ComplaintData {
   resolved: boolean;
   mess?: string;
   mealType?: string;
+  imageUrl?: string | null;
 }
 
 interface ComplaintCardProps {
@@ -72,6 +73,16 @@ const ComplaintCard: React.FC<ComplaintCardProps> = ({
         </div>
       </div>
       <p className="mt-3 text-gray-700">{complaint.description}</p>
+      
+      {complaint.imageUrl && (
+        <div className="mt-4">
+          <img 
+            src={complaint.imageUrl} 
+            alt="Complaint evidence" 
+            className="w-full max-w-sm rounded-md shadow-sm object-cover h-48"
+          />
+        </div>
+      )}
     </div>
   );
 };

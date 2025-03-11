@@ -14,24 +14,26 @@ const MessComplaints = () => {
       regNo: '23BCE1701',
       block: 'A',
       roomNo: '123',
-      name: 'John Doe',
+      name: 'Karan Jain',
       description: 'Found a hair in the curry today at lunch. Please improve hygiene standards.',
       createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       resolved: false,
       mess: 'SRRC',
       mealType: 'Veg',
+      imageUrl: null,
     },
     {
       id: '2',
       regNo: '22BCE1234',
       block: 'B',
       roomNo: '456',
-      name: 'Jane Smith',
+      name: 'Asmita Bag',
       description: 'The rice was undercooked during dinner yesterday.',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       resolved: true,
       mess: 'Shakthi',
       mealType: 'Non-Veg',
+      imageUrl: null,
     },
   ]);
 
@@ -51,6 +53,7 @@ const MessComplaints = () => {
       resolved: false,
       mess: values.mess,
       mealType: values.mealType,
+      imageUrl: values.imageUrl,
     };
 
     setComplaints([newComplaint, ...complaints]);

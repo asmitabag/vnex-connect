@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, PlusCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, PlusCircle, Camera, Upload, X } from 'lucide-react';
 import ComplaintForm from '@/components/ComplaintForm';
 import ComplaintCard, { ComplaintData } from '@/components/ComplaintCard';
 import { useToast } from '@/hooks/use-toast';
@@ -14,20 +14,22 @@ const HostelComplaints = () => {
       regNo: '23BCE1701',
       block: 'A',
       roomNo: '123',
-      name: 'John Doe',
+      name: 'Rishi Garg',
       description: 'Fan not working properly in my room. It makes noise and doesn\'t rotate at full speed.',
       createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       resolved: false,
+      imageUrl: null,
     },
     {
       id: '2',
       regNo: '22BCE1234',
       block: 'B',
       roomNo: '456',
-      name: 'Jane Smith',
+      name: 'Trisha Singh',
       description: 'Light bulb in bathroom needs replacement.',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       resolved: true,
+      imageUrl: null,
     },
   ]);
 
@@ -45,6 +47,7 @@ const HostelComplaints = () => {
       description: values.description,
       createdAt: new Date().toISOString(),
       resolved: false,
+      imageUrl: values.imageUrl,
     };
 
     setComplaints([newComplaint, ...complaints]);
