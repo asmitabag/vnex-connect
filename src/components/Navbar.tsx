@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, BookOpen, Home, MessageSquare, MapPin, Search, Car, Calendar, MapPinOff } from 'lucide-react';
+import { Menu, X, BookOpen, Home, MessageSquare, MapPin, Search, Car, Calendar, MapPinOff, Building } from 'lucide-react';
+import ProfileSelector from './ProfileSelector';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -63,6 +64,10 @@ const Navbar = () => {
             </div>
           </div>
 
+          <div className="hidden md:flex items-center gap-4">
+            <ProfileSelector />
+          </div>
+
           {/* Mobile Menu Button */}
           <button
             className="md:hidden text-gray-700 hover:text-primary-600 focus:outline-none"
@@ -88,6 +93,9 @@ const Navbar = () => {
                 <span>{item.name}</span>
               </Link>
             ))}
+            <div className="p-3">
+              <ProfileSelector />
+            </div>
           </div>
         </div>
       )}
