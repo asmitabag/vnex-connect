@@ -1,8 +1,7 @@
-
 import React, { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Upload, X, Send, AlertTriangle, Buildings } from 'lucide-react';
+import { Camera, Upload, X, Send, AlertTriangle, Building } from 'lucide-react';
 import { 
   Select, 
   SelectContent, 
@@ -329,7 +328,7 @@ const StrayAnimal = () => {
                         {new Date(report.createdAt).toLocaleString()}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <Buildings className="w-4 h-4 text-primary-600" />
+                        <Building className="w-4 h-4 text-primary-600" />
                         <span className="font-medium">{report.campus}</span>
                       </div>
                       <p className="font-medium mt-1">{report.location}</p>

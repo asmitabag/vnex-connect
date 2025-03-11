@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { MapPin, Phone, Star, ExternalLink, Buildings } from "lucide-react";
+import { MapPin, Phone, Star, ExternalLink, Building } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -24,9 +23,7 @@ const PlacesNearby = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedCampus, setSelectedCampus] = useState<string>("Chennai");
 
-  // Sample data for places near each campus
   const allPlaces: Place[] = [
-    // Chennai Campus
     {
       id: "1",
       name: "Phone Hub Electronics",
@@ -57,7 +54,6 @@ const PlacesNearby = () => {
       distance: "1.5 km",
       campus: "Chennai",
     },
-    // Vellore Campus
     {
       id: "4",
       name: "Mobile World",
@@ -88,7 +84,6 @@ const PlacesNearby = () => {
       distance: "1.3 km",
       campus: "Vellore",
     },
-    // Bhopal Campus
     {
       id: "7",
       name: "Tech Solutions",
@@ -109,7 +104,6 @@ const PlacesNearby = () => {
       distance: "0.7 km",
       campus: "Bhopal",
     },
-    // Amaravati Campus
     {
       id: "9",
       name: "Digital Plaza",
@@ -132,7 +126,6 @@ const PlacesNearby = () => {
     },
   ];
 
-  // Filter places based on selected category and campus
   const filteredPlaces = allPlaces.filter(
     (place) =>
       (selectedCategory === "all" || place.category === selectedCategory) &&
@@ -157,7 +150,6 @@ const PlacesNearby = () => {
       </p>
 
       <div className="max-w-4xl mx-auto">
-        {/* Filters */}
         <div className="vnex-card mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -192,7 +184,6 @@ const PlacesNearby = () => {
           </div>
         </div>
 
-        {/* Places List */}
         {filteredPlaces.length === 0 ? (
           <div className="vnex-card text-center py-12">
             <MapPin className="w-12 h-12 mx-auto text-gray-400" />
@@ -216,7 +207,7 @@ const PlacesNearby = () => {
                 </div>
                 
                 <div className="flex items-center text-sm text-gray-600 mt-1">
-                  <Buildings className="w-4 h-4 mr-1" />
+                  <Building className="w-4 h-4 mr-1" />
                   <span>{place.campus} Campus Area</span>
                 </div>
 

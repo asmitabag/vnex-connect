@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +9,7 @@ import {
   MapPin, 
   User, 
   Phone, 
-  Buildings,
+  Building,
   Trash2 
 } from "lucide-react";
 import {
@@ -50,7 +49,6 @@ const CabPartner = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate inputs
     if (!name.trim() || !contact.trim() || !destination.trim() || !date || !time) {
       toast({
         title: "Missing information",
@@ -62,7 +60,6 @@ const CabPartner = () => {
 
     setIsSubmitting(true);
 
-    // Create a new cab share entry
     const newCabShare: CabShare = {
       id: uuidv4(),
       name,
@@ -77,7 +74,6 @@ const CabPartner = () => {
 
     setCabShares((prev) => [...prev, newCabShare]);
 
-    // Reset form
     setName("");
     setContact("");
     setDestination("");
@@ -100,7 +96,6 @@ const CabPartner = () => {
     });
   };
 
-  // Sort cab shares by date (ascending)
   const sortedCabShares = [...cabShares].sort((a, b) => {
     const dateA = new Date(`${a.date}T${a.time}`);
     const dateB = new Date(`${b.date}T${b.time}`);
@@ -117,12 +112,10 @@ const CabPartner = () => {
 
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {/* Form Section */}
           <div className="md:col-span-2">
             <form onSubmit={handleSubmit} className="vnex-card space-y-4">
               <h2 className="text-xl font-semibold mb-2">Post a Cab Share</h2>
 
-              {/* Campus selection */}
               <div>
                 <label className="vnex-label">VIT Campus</label>
                 <Select value={campus} onValueChange={setCampus}>
@@ -138,7 +131,6 @@ const CabPartner = () => {
                 </Select>
               </div>
 
-              {/* Name */}
               <div>
                 <label htmlFor="name" className="vnex-label">Your Name</label>
                 <Input
@@ -149,7 +141,6 @@ const CabPartner = () => {
                 />
               </div>
 
-              {/* Contact */}
               <div>
                 <label htmlFor="contact" className="vnex-label">Contact Number</label>
                 <Input
@@ -160,7 +151,6 @@ const CabPartner = () => {
                 />
               </div>
 
-              {/* Destination */}
               <div>
                 <label htmlFor="destination" className="vnex-label">Destination</label>
                 <Input
@@ -171,7 +161,6 @@ const CabPartner = () => {
                 />
               </div>
 
-              {/* Date and Time */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="date" className="vnex-label">Date</label>
@@ -194,7 +183,6 @@ const CabPartner = () => {
                 </div>
               </div>
 
-              {/* Capacity */}
               <div>
                 <label htmlFor="capacity" className="vnex-label">Number of People</label>
                 <Select value={capacity} onValueChange={setCapacity}>
@@ -210,7 +198,6 @@ const CabPartner = () => {
                 </Select>
               </div>
 
-              {/* Submit Button */}
               <Button
                 type="submit"
                 className="w-full"
@@ -221,7 +208,6 @@ const CabPartner = () => {
             </form>
           </div>
 
-          {/* Listings Section */}
           <div className="md:col-span-3">
             <div className="vnex-card">
               <h2 className="text-xl font-semibold mb-4">Available Cab Shares</h2>
@@ -241,7 +227,7 @@ const CabPartner = () => {
                       <div className="flex justify-between">
                         <div>
                           <div className="flex items-center gap-2">
-                            <Buildings className="w-4 h-4 text-primary-600" />
+                            <Building className="w-4 h-4 text-primary-600" />
                             <span className="text-sm font-medium">{share.campus}</span>
                           </div>
                           <h3 className="font-medium mt-1">{share.destination}</h3>
