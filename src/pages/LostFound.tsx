@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +8,7 @@ import {
   MapPin, 
   User, 
   Phone, 
-  Buildings,
+  Building,
   Trash2, 
   Image as ImageIcon,
   Upload,
@@ -54,7 +53,6 @@ const LostFound = () => {
   const [selectedCampus, setSelectedCampus] = useState("Chennai");
   const [selectedCategory, setSelectedCategory] = useState("all");
   
-  // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -72,7 +70,6 @@ const LostFound = () => {
       const selectedFile = e.target.files[0];
       setImage(selectedFile);
       
-      // Create preview URL
       const fileReader = new FileReader();
       fileReader.onload = () => {
         setPreviewUrl(fileReader.result as string);
@@ -96,7 +93,6 @@ const LostFound = () => {
   const handleSubmit = (e: React.FormEvent, type: "lost" | "found") => {
     e.preventDefault();
 
-    // Validate inputs
     if (!title.trim() || !location.trim() || !category || !date || !contactName.trim() || !contactNumber.trim()) {
       toast({
         title: "Missing information",
@@ -108,7 +104,6 @@ const LostFound = () => {
 
     setIsSubmitting(true);
 
-    // Create a new item
     const newItem: LostFoundItem = {
       id: uuidv4(),
       type,
@@ -126,7 +121,6 @@ const LostFound = () => {
 
     setItems((prev) => [...prev, newItem]);
 
-    // Reset form
     setTitle("");
     setDescription("");
     setCategory("");
@@ -153,7 +147,6 @@ const LostFound = () => {
     });
   };
 
-  // Filter items based on selected campus and category
   const filteredItems = items.filter(
     (item) =>
       item.campus === selectedCampus &&
@@ -185,7 +178,6 @@ const LostFound = () => {
             <TabsTrigger value="found">Report Found Item</TabsTrigger>
           </TabsList>
 
-          {/* Browse Tab */}
           <TabsContent value="browse">
             <div className="vnex-card mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -276,7 +268,7 @@ const LostFound = () => {
                         </div>
 
                         <div className="flex items-center text-sm text-gray-600 mt-1">
-                          <Buildings className="w-4 h-4 mr-1" />
+                          <Building className="w-4 h-4 mr-1" />
                           <span>{item.campus} Campus</span>
                         </div>
 
@@ -310,12 +302,10 @@ const LostFound = () => {
             )}
           </TabsContent>
 
-          {/* Lost Item Form */}
           <TabsContent value="lost">
             <form onSubmit={(e) => handleSubmit(e, "lost")} className="vnex-card space-y-4">
               <h2 className="text-xl font-semibold mb-2">Report a Lost Item</h2>
 
-              {/* Campus selection */}
               <div>
                 <label className="vnex-label">VIT Campus</label>
                 <Select value={selectedCampus} onValueChange={setSelectedCampus}>
@@ -331,7 +321,6 @@ const LostFound = () => {
                 </Select>
               </div>
 
-              {/* Item Title */}
               <div>
                 <label htmlFor="title" className="vnex-label">Item Name</label>
                 <Input
@@ -342,7 +331,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Category */}
               <div>
                 <label htmlFor="category" className="vnex-label">Category</label>
                 <Select value={category} onValueChange={setCategory}>
@@ -359,7 +347,6 @@ const LostFound = () => {
                 </Select>
               </div>
 
-              {/* Description */}
               <div>
                 <label htmlFor="description" className="vnex-label">Description</label>
                 <Textarea
@@ -371,7 +358,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Location */}
               <div>
                 <label htmlFor="location" className="vnex-label">Last Seen Location</label>
                 <Input
@@ -382,7 +368,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Date */}
               <div>
                 <label htmlFor="date" className="vnex-label">Date Lost</label>
                 <Input
@@ -394,7 +379,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Image upload */}
               <div>
                 <label className="vnex-label">Upload Image (Optional)</label>
                 <div className="mt-2">
@@ -436,7 +420,6 @@ const LostFound = () => {
                 </div>
               </div>
 
-              {/* Contact Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="contactName" className="vnex-label">Your Name</label>
@@ -458,7 +441,6 @@ const LostFound = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
@@ -474,12 +456,10 @@ const LostFound = () => {
             </form>
           </TabsContent>
 
-          {/* Found Item Form */}
           <TabsContent value="found">
             <form onSubmit={(e) => handleSubmit(e, "found")} className="vnex-card space-y-4">
               <h2 className="text-xl font-semibold mb-2">Report a Found Item</h2>
 
-              {/* Campus selection */}
               <div>
                 <label className="vnex-label">VIT Campus</label>
                 <Select value={selectedCampus} onValueChange={setSelectedCampus}>
@@ -495,7 +475,6 @@ const LostFound = () => {
                 </Select>
               </div>
 
-              {/* Item Title */}
               <div>
                 <label htmlFor="title-found" className="vnex-label">Item Name</label>
                 <Input
@@ -506,7 +485,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Category */}
               <div>
                 <label htmlFor="category-found" className="vnex-label">Category</label>
                 <Select value={category} onValueChange={setCategory}>
@@ -523,7 +501,6 @@ const LostFound = () => {
                 </Select>
               </div>
 
-              {/* Description */}
               <div>
                 <label htmlFor="description-found" className="vnex-label">Description</label>
                 <Textarea
@@ -535,7 +512,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Location */}
               <div>
                 <label htmlFor="location-found" className="vnex-label">Found Location</label>
                 <Input
@@ -546,7 +522,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Date */}
               <div>
                 <label htmlFor="date-found" className="vnex-label">Date Found</label>
                 <Input
@@ -558,7 +533,6 @@ const LostFound = () => {
                 />
               </div>
 
-              {/* Image upload */}
               <div>
                 <label className="vnex-label">Upload Image (Optional)</label>
                 <div className="mt-2">
@@ -600,7 +574,6 @@ const LostFound = () => {
                 </div>
               </div>
 
-              {/* Contact Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="contactName-found" className="vnex-label">Your Name</label>
@@ -622,7 +595,6 @@ const LostFound = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
