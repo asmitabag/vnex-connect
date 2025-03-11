@@ -1,518 +1,464 @@
 
-import React, { useState, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useState } from 'react';
+import { Plus, Search, MapPin, Calendar, User, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Upload, X, Phone, Mail, MessageCircle } from 'lucide-react';
 
-interface LostItem {
+interface LostFoundItem {
   id: string;
-  type: 'lost' | 'found';
-  name: string;
+  title: string;
   description: string;
+  category: 'lost' | 'found';
   location: string;
-  contactName: string;
-  contactMethod: string;
-  contactValue: string;
-  imageUrl: string | null;
   date: string;
+  contactName: string;
+  contactInfo: string;
+  imageUrl?: string;
+  status: 'open' | 'closed';
 }
 
 const LostFound = () => {
   const { toast } = useToast();
-  const [items, setItems] = useState<LostItem[]>([
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'lost' | 'found'>('all');
+  
+  const [items, setItems] = useState<LostFoundItem[]>([
     {
       id: '1',
-      type: 'lost',
-      name: 'Blue Water Bottle',
-      description: 'Metal blue water bottle with VIT logo, lost near the main library',
-      location: 'Main Library, 2nd Floor',
-      contactName: 'Naman Sharma',
-      contactMethod: 'whatsapp',
-      contactValue: '9876543210',
-      imageUrl: null,
-      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      title: 'Lost Black Wallet',
+      description: 'I lost my black leather wallet near the library. It has my ID card and some cash inside.',
+      category: 'lost',
+      location: 'University Library',
+      date: '2023-10-15',
+      contactName: 'Rishi Garg',
+      contactInfo: '9876543210',
+      imageUrl: 'https://images.unsplash.com/photo-1627843240167-b1f9411c4141?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHdhbGxldHxlbnwwfHwwfHx8MA%3D%3D',
+      status: 'open'
     },
     {
       id: '2',
-      type: 'found',
-      name: 'Calculator',
-      description: 'Scientific calculator (Casio fx-991EX) found in Classroom AB-502',
-      location: 'AB Building, Room 502',
+      title: 'Found Water Bottle',
+      description: 'Found a blue hydro flask water bottle in the MGB block classroom 403.',
+      category: 'found',
+      location: 'MGB Block, Room 403',
+      date: '2023-10-17',
       contactName: 'Asmita Bag',
-      contactMethod: 'email',
-      contactValue: 'asmita.bag2023@vit.ac.in',
-      imageUrl: null,
-      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      contactInfo: '8765432109',
+      imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d2F0ZXIlMjBib3R0bGV8ZW58MHx8MHx8fDA%3D',
+      status: 'open'
+    },
+    {
+      id: '3',
+      title: 'Found Calculator',
+      description: 'Found a Texas Instruments scientific calculator in the TT Building.',
+      category: 'found',
+      location: 'Technology Tower',
+      date: '2023-10-12',
+      contactName: 'Trisha Singh',
+      contactInfo: '7654321098',
+      imageUrl: 'https://images.unsplash.com/photo-1574607383476-f517f260d30b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Y2FsY3VsYXRvcnxlbnwwfHwwfHx8MA%3D%3D',
+      status: 'open'
+    },
+    {
+      id: '4',
+      title: 'Lost Airpods',
+      description: 'I lost my Apple Airpods in a white case somewhere in the food court area.',
+      category: 'lost',
+      location: 'Food Court',
+      date: '2023-10-16',
+      contactName: 'Karan Jain',
+      contactInfo: '6543210987',
+      imageUrl: 'https://images.unsplash.com/photo-1588423771073-b8903fbb85b5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YWlycG9kc3xlbnwwfHwwfHx8MA%3D%3D',
+      status: 'closed'
     }
   ]);
 
-  const [activeTab, setActiveTab] = useState<'all' | 'lost' | 'found'>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<Omit<LostItem, 'id' | 'date'>>({
-    type: 'lost',
-    name: '',
+  const [newItem, setNewItem] = useState<Omit<LostFoundItem, 'id' | 'status'>>({
+    title: '',
     description: '',
+    category: 'lost',
     location: '',
+    date: new Date().toISOString().split('T')[0],
     contactName: '',
-    contactMethod: 'whatsapp',
-    contactValue: '',
-    imageUrl: null,
+    contactInfo: '',
+    imageUrl: ''
   });
-  
-  const [image, setImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setNewItem({ ...newItem, [name]: value });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      setImage(selectedFile);
-      
-      // Create preview URL
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        setPreviewUrl(fileReader.result as string);
-        setFormData({ ...formData, imageUrl: fileReader.result as string });
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewItem({ ...newItem, imageUrl: reader.result as string });
       };
-      fileReader.readAsDataURL(selectedFile);
+      reader.readAsDataURL(file);
     }
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const triggerCameraInput = () => {
-    if (cameraInputRef.current) {
-      cameraInputRef.current.click();
-    }
-  };
-
-  const removeImage = () => {
-    setImage(null);
-    setPreviewUrl(null);
-    setFormData({ ...formData, imageUrl: null });
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simple validation
-    if (!formData.name.trim()) {
+    // Validate
+    if (!newItem.title || !newItem.location || !newItem.contactName || !newItem.contactInfo) {
       toast({
-        title: "Missing name",
-        description: "Please provide a name for the item",
-        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
       });
       return;
     }
     
-    if (!formData.location.trim()) {
-      toast({
-        title: "Missing location",
-        description: `Please provide where you ${formData.type === 'lost' ? 'lost' : 'found'} the item`,
-        variant: "destructive",
-      });
-      return;
-    }
+    const createdItem: LostFoundItem = {
+      ...newItem,
+      id: Date.now().toString(),
+      status: 'open'
+    };
     
-    if (!formData.contactValue.trim()) {
-      toast({
-        title: "Missing contact information",
-        description: "Please provide your contact information",
-        variant: "destructive",
-      });
-      return;
-    }
+    setItems([createdItem, ...items]);
+    setShowForm(false);
     
-    setIsSubmitting(true);
+    // Reset form
+    setNewItem({
+      title: '',
+      description: '',
+      category: 'lost',
+      location: '',
+      date: new Date().toISOString().split('T')[0],
+      contactName: '',
+      contactInfo: '',
+      imageUrl: ''
+    });
     
-    // Simulate API call
-    setTimeout(() => {
-      const newItem: LostItem = {
-        ...formData,
-        id: uuidv4(),
-        date: new Date().toISOString(),
-      };
-      
-      setItems(prevItems => [newItem, ...prevItems]);
-      
-      // Reset form
-      setFormData({
-        type: 'lost',
-        name: '',
-        description: '',
-        location: '',
-        contactName: '',
-        contactMethod: 'whatsapp',
-        contactValue: '',
-        imageUrl: null,
-      });
-      
-      setImage(null);
-      setPreviewUrl(null);
-      setIsSubmitting(false);
-      setIsModalOpen(false);
-      
-      toast({
-        title: "Item posted",
-        description: `Your ${formData.type} item has been posted successfully!`,
-      });
-    }, 1000);
-  };
-
-  const handleDelete = (id: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== id));
     toast({
-      title: "Item removed",
-      description: "Your post has been removed successfully",
+      title: "Success",
+      description: `Your ${newItem.category} item report has been submitted.`,
     });
   };
 
-  const filteredItems = items.filter(item => {
-    if (activeTab === 'all') return true;
-    return item.type === activeTab;
-  });
+  const handleStatusToggle = (id: string) => {
+    setItems(
+      items.map(item => 
+        item.id === id 
+          ? { ...item, status: item.status === 'open' ? 'closed' : 'open' } 
+          : item
+      )
+    );
+    
+    const item = items.find(item => item.id === id);
+    toast({
+      title: item?.status === 'open' ? "Item Closed" : "Item Reopened",
+      description: `The status of "${item?.title}" has been updated.`,
+    });
+  };
+
+  // Filter items based on search and tab
+  const filteredItems = items
+    .filter(item => {
+      if (activeTab === 'all') return true;
+      return item.category === activeTab;
+    })
+    .filter(item => {
+      if (!searchTerm) return true;
+      return (
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
 
   return (
     <div className="vnex-container py-8">
-      <h1 className="vnex-heading">Lost & Found</h1>
-      <p className="text-gray-600 text-center max-w-3xl mx-auto mb-8">
-        Lost something or found someone else's belongings? Post it here to help reunite items with their owners.
-      </p>
-      
-      {/* Main content */}
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex space-x-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 className="text-3xl font-bold text-gray-900">Lost & Found</h1>
+        
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="vnex-button-primary flex items-center gap-2"
+        >
+          <Plus size={18} />
+          <span>{showForm ? 'Cancel' : 'Report Item'}</span>
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="mb-8 vnex-card animate-fade-in">
+          <h2 className="text-xl font-semibold mb-4">Report an Item</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="vnex-label">Item Type*</label>
+                <select 
+                  name="category" 
+                  value={newItem.category}
+                  onChange={handleInputChange}
+                  className="vnex-input"
+                  required
+                >
+                  <option value="lost">Lost Item</option>
+                  <option value="found">Found Item</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="vnex-label">Item Name*</label>
+                <input 
+                  type="text"
+                  name="title"
+                  value={newItem.title}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Black Wallet, Blue Backpack"
+                  className="vnex-input"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="vnex-label">Location*</label>
+                <input 
+                  type="text"
+                  name="location"
+                  value={newItem.location}
+                  onChange={handleInputChange}
+                  placeholder="Where lost/found?"
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Date*</label>
+                <input 
+                  type="date"
+                  name="date"
+                  value={newItem.date}
+                  onChange={handleInputChange}
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Your Name*</label>
+                <input 
+                  type="text"
+                  name="contactName"
+                  value={newItem.contactName}
+                  onChange={handleInputChange}
+                  placeholder="Your full name"
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Contact Number*</label>
+                <input 
+                  type="text"
+                  name="contactInfo"
+                  value={newItem.contactInfo}
+                  onChange={handleInputChange}
+                  placeholder="Your phone number"
+                  className="vnex-input"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="vnex-label">Description</label>
+              <textarea 
+                name="description"
+                value={newItem.description}
+                onChange={handleInputChange}
+                placeholder="Describe the item in detail"
+                className="vnex-input"
+                rows={3}
+              />
+            </div>
+            
+            <div>
+              <label className="vnex-label">Upload Image</label>
+              <input 
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-primary-50 file:text-primary-700
+                  hover:file:bg-primary-100"
+              />
+              {newItem.imageUrl && (
+                <div className="mt-2">
+                  <img 
+                    src={newItem.imageUrl} 
+                    alt="Preview" 
+                    className="h-32 w-auto rounded-md object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end">
+              <button type="submit" className="vnex-button-primary">
+                Submit Report
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="inline-flex rounded-md shadow-sm" role="group">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === 'all' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+                activeTab === 'all'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+              } border`}
             >
               All Items
             </button>
             <button
               onClick={() => setActiveTab('lost')}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === 'lost' 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === 'lost'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+              } border-t border-b border-r`}
             >
               Lost Items
             </button>
             <button
               onClick={() => setActiveTab('found')}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === 'found' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
+                activeTab === 'found'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+              } border-t border-b border-r`}
             >
               Found Items
             </button>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="vnex-button-primary"
-          >
-            Post New Item
-          </button>
-        </div>
-        
-        {/* Items list */}
-        <div className="space-y-4">
-          {filteredItems.length === 0 ? (
-            <div className="vnex-card text-center py-8">
-              <p className="text-gray-500">No items found in this category.</p>
+          
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
             </div>
-          ) : (
-            filteredItems.map(item => (
-              <div 
-                key={item.id}
-                className={`vnex-card border-l-4 ${
-                  item.type === 'lost' ? 'border-l-red-500' : 'border-l-green-500'
-                }`}
-              >
-                <div className="flex flex-col md:flex-row">
-                  {item.imageUrl && (
-                    <div className="md:w-1/4 mb-4 md:mb-0 md:mr-4">
-                      <img 
-                        src={item.imageUrl} 
-                        alt={item.name}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
-                    </div>
-                  )}
-                  
-                  <div className={`${item.imageUrl ? 'md:w-3/4' : 'w-full'}`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                          item.type === 'lost' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                        } mb-2`}>
-                          {item.type === 'lost' ? 'Lost Item' : 'Found Item'}
-                        </span>
-                        <h3 className="font-semibold text-lg">{item.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(item.date).toLocaleDateString()} • {item.location}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                        title="Remove Item"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                    
-                    <p className="mt-2 text-gray-700">{item.description}</p>
-                    
-                    <div className="mt-4 pt-3 border-t border-gray-100">
-                      <p className="text-sm font-medium">Contact: {item.contactName}</p>
-                      <div className="flex items-center mt-1">
-                        {item.contactMethod === 'whatsapp' && (
-                          <MessageCircle className="w-4 h-4 text-green-600 mr-2" />
-                        )}
-                        {item.contactMethod === 'phone' && (
-                          <Phone className="w-4 h-4 text-blue-600 mr-2" />
-                        )}
-                        {item.contactMethod === 'email' && (
-                          <Mail className="w-4 h-4 text-purple-600 mr-2" />
-                        )}
-                        <span className="text-sm">{item.contactValue}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-      
-      {/* Modal for adding a new item */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Post a {formData.type === 'lost' ? 'Lost' : 'Found'} Item</h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, type: 'lost' })}
-                    className={`flex-1 py-2 rounded-md ${
-                      formData.type === 'lost' 
-                        ? 'bg-red-600 text-white' 
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    I Lost Something
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, type: 'found' })}
-                    className={`flex-1 py-2 rounded-md ${
-                      formData.type === 'found' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    I Found Something
-                  </button>
-                </div>
-                
-                <div>
-                  <label htmlFor="name" className="vnex-label">Item Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="e.g., Blue Water Bottle, Calculator, ID Card"
-                    className="vnex-input"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="location" className="vnex-label">
-                    {formData.type === 'lost' ? 'Where did you lose it?' : 'Where did you find it?'}
-                  </label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    placeholder="e.g., Main Library, Classroom AB-502"
-                    className="vnex-input"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="description" className="vnex-label">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Provide details about the item to help identify it correctly"
-                    className="vnex-input"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="contactName" className="vnex-label">Your Name</label>
-                  <input
-                    type="text"
-                    id="contactName"
-                    name="contactName"
-                    value={formData.contactName}
-                    onChange={handleChange}
-                    placeholder="Your name"
-                    className="vnex-input"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="contactMethod" className="vnex-label">Contact Method</label>
-                    <select
-                      id="contactMethod"
-                      name="contactMethod"
-                      value={formData.contactMethod}
-                      onChange={handleChange}
-                      className="vnex-input"
-                    >
-                      <option value="whatsapp">WhatsApp</option>
-                      <option value="phone">Phone</option>
-                      <option value="email">Email</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="contactValue" className="vnex-label">Contact Details</label>
-                    <input
-                      type="text"
-                      id="contactValue"
-                      name="contactValue"
-                      value={formData.contactValue}
-                      onChange={handleChange}
-                      placeholder={
-                        formData.contactMethod === 'email' 
-                          ? 'your.email@vit.ac.in' 
-                          : '9876543210'
-                      }
-                      className="vnex-input"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="vnex-label">Upload Image (Optional)</label>
-                  <div className="mt-2 flex flex-col items-center">
-                    {previewUrl ? (
-                      <div className="relative w-full max-w-md">
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          className="w-full h-48 object-cover rounded-md shadow-md"
-                        />
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-full flex flex-col gap-2 sm:flex-row sm:justify-center">
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                          accept="image/*"
-                          className="hidden"
-                        />
-                        <input
-                          type="file"
-                          ref={cameraInputRef}
-                          onChange={handleFileChange}
-                          accept="image/*"
-                          capture="environment"
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={triggerFileInput}
-                          className="vnex-button-secondary flex items-center justify-center gap-2"
-                        >
-                          <Upload className="w-5 h-5" />
-                          <span>Upload Photo</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={triggerCameraInput}
-                          className="vnex-button-secondary flex items-center justify-center gap-2"
-                        >
-                          <Camera className="w-5 h-5" />
-                          <span>Take Photo</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="vnex-button-secondary mr-2"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="vnex-button-primary"
-                  >
-                    {isSubmitting ? 'Posting...' : 'Post Item'}
-                  </button>
-                </div>
-              </form>
-            </div>
+            <input
+              type="text"
+              placeholder="Search items..."
+              className="pl-10 vnex-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="space-y-4">
+        {filteredItems.length === 0 ? (
+          <div className="vnex-card text-center py-8">
+            <p className="text-gray-500">No items found. Be the first to report an item!</p>
+          </div>
+        ) : (
+          filteredItems.map((item) => (
+            <div 
+              key={item.id} 
+              className={`vnex-card hover:shadow-lg transition-all ${
+                item.status === 'closed' ? 'opacity-75' : ''
+              }`}
+            >
+              <div className="flex flex-col md:flex-row gap-4">
+                {item.imageUrl && (
+                  <div className="w-full md:w-1/4">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.title} 
+                      className="w-full h-40 md:h-full object-cover rounded-md"
+                    />
+                  </div>
+                )}
+                
+                <div className={`flex-1 ${!item.imageUrl ? 'w-full' : 'md:w-3/4'}`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span 
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            item.category === 'lost' 
+                              ? 'bg-red-100 text-red-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {item.category === 'lost' ? 'Lost' : 'Found'}
+                        </span>
+                        
+                        <span 
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            item.status === 'open'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {item.status === 'open' ? 'Open' : 'Closed'}
+                        </span>
+                      </div>
+                      
+                      <h3 className="text-lg font-semibold mt-2">{item.title}</h3>
+                    </div>
+                    
+                    <button
+                      onClick={() => handleStatusToggle(item.id)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        item.status === 'open'
+                          ? 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                          : 'bg-blue-100 hover:bg-blue-200 text-blue-800'
+                      }`}
+                    >
+                      {item.status === 'open' ? 'Mark as Closed' : 'Reopen'}
+                    </button>
+                  </div>
+                  
+                  <p className="text-gray-600 mt-2">
+                    {item.description}
+                  </p>
+                  
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm">{item.location}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Calendar className="w-4 h-4" />
+                      <span className="text-sm">{new Date(item.date).toLocaleDateString()}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">{item.contactName}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MessageSquare className="w-4 h-4" />
+                      <span className="text-sm">{item.contactInfo}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };

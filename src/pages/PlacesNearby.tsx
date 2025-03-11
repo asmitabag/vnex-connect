@@ -1,172 +1,188 @@
 
 import React from 'react';
-import { MapPin, Navigation, ExternalLink } from 'lucide-react';
+import { MapPin, Coffee, ShoppingBag, Utensils } from 'lucide-react';
 
 interface NearbyPlace {
   id: string;
   name: string;
-  category: string;
+  category: 'cafe' | 'restaurant' | 'shopping' | 'convenience';
   distance: string;
   address: string;
-  description: string;
-  mapLink: string;
+  rating: number;
   imageUrl: string;
 }
 
-const places: NearbyPlace[] = [
-  {
-    id: '1',
-    name: 'Green Trends Salon',
-    category: 'Services',
-    distance: '2.4 km',
-    address: 'Padur Main Road, Kelambakkam',
-    description: 'Professional hair salon offering haircuts, styling, and other grooming services.',
-    mapLink: 'https://maps.google.com',
-    imageUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8c2Fsb258ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60',
-  },
-  {
-    id: '2',
-    name: 'Annalakshmi Restaurant',
-    category: 'Food',
-    distance: '3.1 km',
-    address: 'ECR Road, Kovalam',
-    description: 'Popular South Indian restaurant with a variety of vegetarian options.',
-    mapLink: 'https://maps.google.com',
-    imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60',
-  },
-  {
-    id: '3',
-    name: 'Titan Eye Plus',
-    category: 'Eyewear',
-    distance: '4.5 km',
-    address: 'Sholinganallur Main Road',
-    description: 'Optical store offering eye testing and a wide range of spectacles and sunglasses.',
-    mapLink: 'https://maps.google.com',
-    imageUrl: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8ZXllZ2xhc3Nlc3xlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60',
-  },
-  {
-    id: '4',
-    name: 'Airtel Store',
-    category: 'Mobile & Electronics',
-    distance: '3.7 km',
-    address: 'OMR Road, Navallur',
-    description: 'Official Airtel store for SIM cards, mobile plans, and customer service.',
-    mapLink: 'https://maps.google.com',
-    imageUrl: 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8bW9iaWxlJTIwc3RvcmV8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60',
-  },
-  {
-    id: '5',
-    name: 'Apollo Pharmacy',
-    category: 'Healthcare',
-    distance: '2.8 km',
-    address: 'Kelambakkam Main Road',
-    description: 'Pharmacy store with medicines, personal care products, and basic healthcare equipment.',
-    mapLink: 'https://maps.google.com',
-    imageUrl: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cGhhcm1hY3l8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60',
-  },
-];
-
-const categories = ['All', 'Food', 'Healthcare', 'Mobile & Electronics', 'Eyewear', 'Services'];
-
 const PlacesNearby = () => {
-  const [activeCategory, setActiveCategory] = React.useState('All');
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const places: NearbyPlace[] = [
+    {
+      id: '1',
+      name: 'Amul Ice Cream Parlour',
+      category: 'cafe',
+      distance: '0.3 km',
+      address: 'VIT Campus, Vellore',
+      rating: 4.3,
+      imageUrl: 'https://images.unsplash.com/photo-1581339486231-4a2e6fe1f91f?q=80&w=500&auto=format&fit=crop'
+    },
+    {
+      id: '2',
+      name: 'Darling Bakery',
+      category: 'cafe',
+      distance: '0.5 km',
+      address: 'Gandhi Road, Vellore',
+      rating: 4.2,
+      imageUrl: 'https://images.unsplash.com/photo-1569864358642-9d1684040f43?q=80&w=500&auto=format&fit=crop'
+    },
+    {
+      id: '3',
+      name: 'Grand Krishna Restaurant',
+      category: 'restaurant',
+      distance: '0.7 km',
+      address: 'Katpadi Road, Vellore',
+      rating: 4.5,
+      imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop'
+    },
+    {
+      id: '4',
+      name: 'Delhi Highway Restaurant',
+      category: 'restaurant',
+      distance: '1.2 km',
+      address: 'VIT Road, Vellore',
+      rating: 4.0,
+      imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=500&auto=format&fit=crop'
+    },
+    {
+      id: '5',
+      name: 'Reliance Mart',
+      category: 'shopping',
+      distance: '1.5 km',
+      address: 'Chittoor Road, Vellore',
+      rating: 4.1,
+      imageUrl: 'https://images.unsplash.com/photo-1481437156560-3205f6a55735?q=80&w=500&auto=format&fit=crop'
+    },
+    {
+      id: '6',
+      name: 'More Supermarket',
+      category: 'convenience',
+      distance: '0.9 km',
+      address: 'Gandhi Road, Vellore',
+      rating: 3.9,
+      imageUrl: 'https://images.unsplash.com/photo-1534723328310-e82dad3ee43f?q=80&w=500&auto=format&fit=crop'
+    }
+  ];
 
-  const filteredPlaces = places.filter(place => {
-    const matchesCategory = activeCategory === 'All' || place.category === activeCategory;
-    const matchesSearch = place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          place.description.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
+
+  const filteredPlaces = activeCategory 
+    ? places.filter(place => place.category === activeCategory)
+    : places;
 
   return (
     <div className="vnex-container py-8">
-      <h1 className="vnex-heading">Places Near VIT Chennai</h1>
-      <p className="text-gray-600 text-center max-w-3xl mx-auto mb-8">
-        Discover essential services and places around the campus to make your campus life easier.
-        All distances are calculated from VIT Chennai, Kelambakkam.
-      </p>
-
-      {/* Search and filter */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search places..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="vnex-input"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-3 py-1 rounded-full text-sm ${
-                  activeCategory === category 
-                    ? 'bg-primary-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">Places Nearby</h1>
+      
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={() => setActiveCategory(null)}
+            className={`px-4 py-2 rounded-full ${activeCategory === null ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-800'}`}
+          >
+            All
+          </button>
+          <button 
+            onClick={() => setActiveCategory('cafe')}
+            className={`px-4 py-2 rounded-full flex items-center gap-2 ${activeCategory === 'cafe' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-800'}`}
+          >
+            <Coffee size={16} />
+            Cafes
+          </button>
+          <button 
+            onClick={() => setActiveCategory('restaurant')}
+            className={`px-4 py-2 rounded-full flex items-center gap-2 ${activeCategory === 'restaurant' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-800'}`}
+          >
+            <Utensils size={16} />
+            Restaurants
+          </button>
+          <button 
+            onClick={() => setActiveCategory('shopping')}
+            className={`px-4 py-2 rounded-full flex items-center gap-2 ${activeCategory === 'shopping' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-800'}`}
+          >
+            <ShoppingBag size={16} />
+            Shopping
+          </button>
+          <button 
+            onClick={() => setActiveCategory('convenience')}
+            className={`px-4 py-2 rounded-full flex items-center gap-2 ${activeCategory === 'convenience' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-800'}`}
+          >
+            <MapPin size={16} />
+            Convenience
+          </button>
         </div>
       </div>
-
-      {/* Places list */}
-      <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredPlaces.length > 0 ? (
-            filteredPlaces.map(place => (
-              <div key={place.id} className="vnex-card overflow-hidden flex flex-col h-full">
-                <div className="h-48 overflow-hidden">
-                  <img 
-                    src={place.imageUrl} 
-                    alt={place.name} 
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
-                </div>
-                <div className="p-4 flex-grow">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-lg">{place.name}</h3>
-                      <p className="text-sm text-gray-500">{place.category}</p>
-                    </div>
-                    <span className="flex items-center text-sm font-medium text-primary-600">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {place.distance}
-                    </span>
-                  </div>
-                  <p className="text-gray-700 mt-2">{place.description}</p>
-                  <p className="text-sm text-gray-500 mt-2">{place.address}</p>
-                </div>
-                <div className="px-4 pb-4">
-                  <a 
-                    href={place.mapLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center w-full py-2 bg-primary-50 text-primary-600 rounded-md hover:bg-primary-100 transition-colors"
-                  >
-                    <Navigation className="w-4 h-4 mr-2" />
-                    <span>Get Directions</span>
-                    <ExternalLink className="w-3 h-3 ml-1" />
-                  </a>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-2 vnex-card text-center py-8">
-              <p className="text-gray-500">No places found matching your criteria. Try a different search or category.</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredPlaces.map(place => (
+          <div key={place.id} className="vnex-card hover:shadow-lg transition-all">
+            <div className="h-40 w-full overflow-hidden rounded-t-md">
+              <img 
+                src={place.imageUrl} 
+                alt={place.name} 
+                className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+              />
             </div>
-          )}
-        </div>
+            <div className="p-4">
+              <h3 className="font-semibold text-lg">{place.name}</h3>
+              <div className="flex items-center gap-1 text-gray-600 mt-1">
+                <MapPin size={16} />
+                <span className="text-sm">{place.distance} • {place.address}</span>
+              </div>
+              
+              <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <svg 
+                      key={i} 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill={i < Math.floor(place.rating) ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      className={`w-4 h-4 ${i < Math.floor(place.rating) ? "text-yellow-500" : "text-gray-300"}`}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  ))}
+                  <span className="ml-1 text-sm font-medium">{place.rating}</span>
+                </div>
+                
+                <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(place.category)}`}>
+                  {getCategoryLabel(place.category)}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
+
+function getCategoryLabel(category: string): string {
+  switch (category) {
+    case 'cafe': return 'Cafe';
+    case 'restaurant': return 'Restaurant';
+    case 'shopping': return 'Shopping';
+    case 'convenience': return 'Convenience';
+    default: return category;
+  }
+}
+
+function getCategoryColor(category: string): string {
+  switch (category) {
+    case 'cafe': return 'bg-blue-100 text-blue-800';
+    case 'restaurant': return 'bg-green-100 text-green-800';
+    case 'shopping': return 'bg-purple-100 text-purple-800';
+    case 'convenience': return 'bg-orange-100 text-orange-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+}
 
 export default PlacesNearby;

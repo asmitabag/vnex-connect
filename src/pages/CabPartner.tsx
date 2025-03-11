@@ -1,480 +1,452 @@
 
 import React, { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { MapPin, Calendar, Clock, User, Phone, ChevronDown, ChevronUp, Search, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, MapPin, User, Calendar, X, MessageCircle, Phone } from 'lucide-react';
 
 interface TripRequest {
   id: string;
-  type: 'airport' | 'railway' | 'bus';
-  destination: string;
+  from: string;
+  to: string;
   date: string;
   time: string;
   name: string;
-  contact: string;
-  contactType: 'whatsapp' | 'phone';
-  seats: number;
-  notes: string;
+  contactNumber: string;
+  totalSeats: number;
+  availableSeats: number;
+  notes?: string;
   createdAt: string;
 }
 
 const CabPartner = () => {
   const { toast } = useToast();
-  const [tripRequests, setTripRequests] = useState<TripRequest[]>([
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [formData, setFormData] = useState<Omit<TripRequest, 'id' | 'createdAt'>>({
+    from: '',
+    to: '',
+    date: new Date().toISOString().split('T')[0],
+    time: '',
+    name: '',
+    contactNumber: '',
+    totalSeats: 4,
+    availableSeats: 3,
+    notes: ''
+  });
+
+  const [trips, setTrips] = useState<TripRequest[]>([
     {
       id: '1',
-      type: 'airport',
-      destination: 'Chennai International Airport',
-      date: '2023-06-10',
-      time: '14:30',
+      from: 'VIT Main Gate',
+      to: 'Chennai Airport',
+      date: '2023-10-25',
+      time: '14:00',
       name: 'Rishi Garg',
-      contact: '9876543210',
-      contactType: 'whatsapp',
-      seats: 2,
-      notes: 'Flight at 17:30, prefer to reach 2 hours early',
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      contactNumber: '9876543210',
+      totalSeats: 4,
+      availableSeats: 2,
+      notes: 'Will be leaving at 2 PM sharp. Fare will be split equally.',
+      createdAt: '2023-10-20T10:30:00Z'
     },
     {
       id: '2',
-      type: 'railway',
-      destination: 'Chennai Central Railway Station',
-      date: '2023-06-12',
-      time: '08:00',
-      name: 'Preksha Chawla',
-      contact: '9876543211',
-      contactType: 'phone',
-      seats: 1,
-      notes: 'Train departure at 10:15 AM, have luggage',
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      from: 'Chennai Central',
+      to: 'VIT Campus',
+      date: '2023-10-26',
+      time: '09:30',
+      name: 'Asmita Bag',
+      contactNumber: '8765432109',
+      totalSeats: 4,
+      availableSeats: 3,
+      createdAt: '2023-10-20T11:45:00Z'
     },
+    {
+      id: '3',
+      from: 'VIT Campus',
+      to: 'Vellore Bus Stand',
+      date: '2023-10-24',
+      time: '18:00',
+      name: 'Naman Sharma',
+      contactNumber: '7654321098',
+      totalSeats: 4,
+      availableSeats: 1,
+      notes: 'Will be sharing Uber. Payment through UPI.',
+      createdAt: '2023-10-19T15:20:00Z'
+    },
+    {
+      id: '4',
+      from: 'Katpadi Railway Station',
+      to: 'VIT Campus',
+      date: '2023-10-23',
+      time: '21:30',
+      name: 'Trisha Singh',
+      contactNumber: '6543210987',
+      totalSeats: 4,
+      availableSeats: 2,
+      createdAt: '2023-10-19T09:15:00Z'
+    }
   ]);
 
-  const [activeFilter, setActiveFilter] = useState<'all' | 'airport' | 'railway' | 'bus'>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Omit<TripRequest, 'id' | 'createdAt'>>({
-    type: 'airport',
-    destination: '',
-    date: '',
-    time: '',
-    name: '',
-    contact: '',
-    contactType: 'whatsapp',
-    seats: 1,
-    notes: '',
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData({
+      ...formData,
+      [name]: name === 'totalSeats' || name === 'availableSeats' ? parseInt(value) : value
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simple validation
-    if (!formData.destination.trim()) {
+    // Validate
+    if (!formData.from || !formData.to || !formData.date || !formData.time || !formData.name || !formData.contactNumber) {
       toast({
-        title: "Missing destination",
-        description: "Please specify your destination",
-        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
       });
       return;
     }
     
-    if (!formData.date) {
+    if (formData.availableSeats >= formData.totalSeats) {
       toast({
-        title: "Missing date",
-        description: "Please select travel date",
-        variant: "destructive",
+        title: "Error",
+        description: "Available seats must be less than total seats",
+        variant: "destructive"
       });
       return;
     }
     
-    if (!formData.time) {
-      toast({
-        title: "Missing time",
-        description: "Please select travel time",
-        variant: "destructive",
-      });
-      return;
-    }
+    const newTrip: TripRequest = {
+      ...formData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
     
-    if (!formData.name.trim()) {
-      toast({
-        title: "Missing name",
-        description: "Please provide your name",
-        variant: "destructive",
-      });
-      return;
-    }
+    setTrips([newTrip, ...trips]);
+    setShowForm(false);
     
-    if (!formData.contact.trim()) {
-      toast({
-        title: "Missing contact",
-        description: "Please provide your contact information",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Reset form
+    setFormData({
+      from: '',
+      to: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '',
+      name: '',
+      contactNumber: '',
+      totalSeats: 4,
+      availableSeats: 3,
+      notes: ''
+    });
     
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const newRequest: TripRequest = {
-        ...formData,
-        id: uuidv4(),
-        createdAt: new Date().toISOString(),
-      };
-      
-      setTripRequests(prevRequests => [newRequest, ...prevRequests]);
-      
-      // Reset form
-      setFormData({
-        type: 'airport',
-        destination: '',
-        date: '',
-        time: '',
-        name: '',
-        contact: '',
-        contactType: 'whatsapp',
-        seats: 1,
-        notes: '',
-      });
-      
-      setIsSubmitting(false);
-      setIsModalOpen(false);
-      
-      toast({
-        title: "Trip posted",
-        description: "Your cab sharing request has been posted successfully!",
-      });
-    }, 1000);
-  };
-
-  const handleDelete = (id: string) => {
-    setTripRequests(prevRequests => prevRequests.filter(request => request.id !== id));
     toast({
-      title: "Trip removed",
-      description: "Your cab sharing request has been removed",
+      title: "Success",
+      description: "Your trip has been posted successfully!",
     });
   };
 
-  const filteredRequests = tripRequests.filter(request => {
-    if (activeFilter === 'all') return true;
-    return request.type === activeFilter;
-  });
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'airport': return 'Airport';
-      case 'railway': return 'Railway Station';
-      case 'bus': return 'Bus Terminal';
-      default: return type;
+  const handleJoinTrip = (id: string) => {
+    setTrips(
+      trips.map(trip => 
+        trip.id === id && trip.availableSeats > 0
+          ? { ...trip, availableSeats: trip.availableSeats - 1 }
+          : trip
+      )
+    );
+    
+    const trip = trips.find(t => t.id === id);
+    if (trip && trip.availableSeats > 0) {
+      toast({
+        title: "Request Sent",
+        description: `Your request to join the trip to ${trip.to} has been sent to ${trip.name}. They will contact you shortly.`,
+      });
     }
   };
 
+  // Filter trips based on search term
+  const filteredTrips = trips.filter(trip => {
+    if (!searchTerm) return true;
+    return (
+      trip.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      trip.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      trip.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (trip.notes && trip.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
+
+  // Sort trips by date (upcoming first)
+  const sortedTrips = [...filteredTrips].sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.time}`).getTime();
+    const dateB = new Date(`${b.date}T${b.time}`).getTime();
+    return dateA - dateB;
+  });
+
   return (
     <div className="vnex-container py-8">
-      <h1 className="vnex-heading">Cab Partner Finder</h1>
-      <p className="text-gray-600 text-center max-w-3xl mx-auto mb-8">
-        Find partners to share a cab with for airport, railway station, or bus terminal trips.
-        Split the fare and make travel more affordable.
-      </p>
-      
-      {/* Main content */}
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={`px-4 py-2 rounded-md whitespace-nowrap ${
-                activeFilter === 'all' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All Trips
-            </button>
-            <button
-              onClick={() => setActiveFilter('airport')}
-              className={`px-4 py-2 rounded-md whitespace-nowrap ${
-                activeFilter === 'airport' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Airport
-            </button>
-            <button
-              onClick={() => setActiveFilter('railway')}
-              className={`px-4 py-2 rounded-md whitespace-nowrap ${
-                activeFilter === 'railway' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Railway
-            </button>
-            <button
-              onClick={() => setActiveFilter('bus')}
-              className={`px-4 py-2 rounded-md whitespace-nowrap ${
-                activeFilter === 'bus' 
-                  ? 'bg-amber-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Bus
-            </button>
-          </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="vnex-button-primary whitespace-nowrap"
-          >
-            Post Trip
-          </button>
-        </div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Cab Partner</h1>
         
-        {/* Trip requests list */}
-        <div className="space-y-4">
-          {filteredRequests.length === 0 ? (
-            <div className="vnex-card text-center py-8">
-              <p className="text-gray-500">No trip requests found in this category.</p>
-            </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="vnex-button-primary flex items-center gap-2"
+        >
+          {showForm ? (
+            <>
+              <ChevronUp className="w-5 h-5" />
+              <span>Cancel</span>
+            </>
           ) : (
-            filteredRequests.map(request => (
-              <div 
-                key={request.id}
-                className={`vnex-card border-l-4 ${
-                  request.type === 'airport' ? 'border-l-blue-500' : 
-                  request.type === 'railway' ? 'border-l-green-500' : 
-                  'border-l-amber-500'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                      request.type === 'airport' ? 'bg-blue-100 text-blue-800' : 
-                      request.type === 'railway' ? 'bg-green-100 text-green-800' : 
-                      'bg-amber-100 text-amber-800'
-                    } mb-2`}>
-                      {getTypeLabel(request.type)}
-                    </span>
-                    <h3 className="font-semibold text-lg">{request.destination}</h3>
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600 mt-1">
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        <span>{new Date(request.date).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        <span>{request.time}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <User className="w-4 h-4 mr-1" />
-                        <span>{request.seats} {request.seats === 1 ? 'seat' : 'seats'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(request.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                    title="Remove Request"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                {request.notes && (
-                  <p className="mt-3 text-gray-700">{request.notes}</p>
-                )}
-                
-                <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-                  <div>
-                    <p className="text-sm font-medium">Contact: {request.name}</p>
-                    <div className="flex items-center mt-1">
-                      {request.contactType === 'whatsapp' ? (
-                        <MessageCircle className="w-4 h-4 text-green-600 mr-2" />
-                      ) : (
-                        <Phone className="w-4 h-4 text-blue-600 mr-2" />
-                      )}
-                      <span className="text-sm">{request.contact}</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Posted {new Date(request.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            ))
+            <>
+              <Users className="w-5 h-5" />
+              <span>Post a Trip</span>
+            </>
           )}
-        </div>
+        </button>
       </div>
-      
-      {/* Modal for adding a new trip request */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Post Cab Sharing Request</h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+      {showForm && (
+        <div className="mb-8 vnex-card animate-fade-in">
+          <h2 className="text-xl font-semibold mb-4">Post a Trip</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="vnex-label">From*</label>
+                <input 
+                  type="text"
+                  name="from"
+                  value={formData.from}
+                  onChange={handleInputChange}
+                  placeholder="Starting point"
+                  className="vnex-input"
+                  required
+                />
               </div>
               
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="type" className="vnex-label">Destination Type</label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleChange}
-                    className="vnex-input"
-                  >
-                    <option value="airport">Airport</option>
-                    <option value="railway">Railway Station</option>
-                    <option value="bus">Bus Terminal</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="destination" className="vnex-label">Specific Destination</label>
-                  <input
-                    type="text"
-                    id="destination"
-                    name="destination"
-                    value={formData.destination}
-                    onChange={handleChange}
-                    placeholder="e.g., Chennai International Airport, Chennai Central"
-                    className="vnex-input"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="date" className="vnex-label">Travel Date</label>
-                    <input
-                      type="date"
-                      id="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                      className="vnex-input"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="time" className="vnex-label">Departure Time</label>
-                    <input
-                      type="time"
-                      id="time"
-                      name="time"
-                      value={formData.time}
-                      onChange={handleChange}
-                      className="vnex-input"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="name" className="vnex-label">Your Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Your name"
-                    className="vnex-input"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="contactType" className="vnex-label">Contact Method</label>
-                    <select
-                      id="contactType"
-                      name="contactType"
-                      value={formData.contactType}
-                      onChange={handleChange}
-                      className="vnex-input"
-                    >
-                      <option value="whatsapp">WhatsApp</option>
-                      <option value="phone">Phone</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="contact" className="vnex-label">Contact Number</label>
-                    <input
-                      type="text"
-                      id="contact"
-                      name="contact"
-                      value={formData.contact}
-                      onChange={handleChange}
-                      placeholder="9876543210"
-                      className="vnex-input"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="seats" className="vnex-label">Number of Seats</label>
-                  <select
-                    id="seats"
-                    name="seats"
-                    value={formData.seats}
-                    onChange={handleChange}
-                    className="vnex-input"
-                  >
-                    {[1, 2, 3, 4].map(num => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="notes" className="vnex-label">Additional Notes (Optional)</label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Any additional information about your travel plans"
-                    className="vnex-input"
-                  />
-                </div>
-                
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="vnex-button-secondary mr-2"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="vnex-button-primary"
-                  >
-                    {isSubmitting ? 'Posting...' : 'Post Request'}
-                  </button>
-                </div>
-              </form>
+              <div>
+                <label className="vnex-label">To*</label>
+                <input 
+                  type="text"
+                  name="to"
+                  value={formData.to}
+                  onChange={handleInputChange}
+                  placeholder="Destination"
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Date*</label>
+                <input 
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Time*</label>
+                <input 
+                  type="time"
+                  name="time"
+                  value={formData.time}
+                  onChange={handleInputChange}
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Your Name*</label>
+                <input 
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Your full name"
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Contact Number*</label>
+                <input 
+                  type="tel"
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={handleInputChange}
+                  placeholder="Your phone number"
+                  className="vnex-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="vnex-label">Total Seats</label>
+                <select
+                  name="totalSeats"
+                  value={formData.totalSeats}
+                  onChange={handleInputChange}
+                  className="vnex-input"
+                >
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                  <option value={5}>5</option>
+                  <option value={6}>6</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="vnex-label">Available Seats</label>
+                <select
+                  name="availableSeats"
+                  value={formData.availableSeats}
+                  onChange={handleInputChange}
+                  className="vnex-input"
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                  <option value={5}>5</option>
+                </select>
+              </div>
             </div>
-          </div>
+            
+            <div>
+              <label className="vnex-label">Additional Notes</label>
+              <textarea 
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Any additional information about the trip"
+                className="vnex-input"
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex justify-end">
+              <button type="submit" className="vnex-button-primary">
+                Post Trip
+              </button>
+            </div>
+          </form>
         </div>
       )}
+
+      <div className="mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by location or name..."
+            className="pl-10 vnex-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {sortedTrips.length === 0 ? (
+          <div className="vnex-card text-center py-8">
+            <p className="text-gray-500">No trips found. Be the first to post a trip!</p>
+          </div>
+        ) : (
+          sortedTrips.map((trip) => (
+            <div key={trip.id} className="vnex-card hover:shadow-lg transition-all">
+              <div className="flex flex-col md:flex-row justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <div className="rounded-full bg-primary-100 p-1.5">
+                      <MapPin className="h-5 w-5 text-primary-700" />
+                    </div>
+                    <div className="ml-2 flex items-center">
+                      <span className="font-medium">{trip.from}</span>
+                      <span className="mx-2 text-gray-400">→</span>
+                      <span className="font-medium">{trip.to}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-600 mb-4">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <span>{formatDate(trip.date)}</span>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>{formatTime(trip.time)}</span>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      <span>{trip.name}</span>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 mr-2" />
+                      <span>{trip.contactNumber}</span>
+                    </div>
+                  </div>
+                  
+                  {trip.notes && (
+                    <div className="mb-4 text-gray-600 text-sm border-l-2 border-gray-200 pl-3">
+                      {trip.notes}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex flex-col justify-between items-end mt-4 md:mt-0 md:ml-4">
+                  <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full">
+                    <Users className="h-4 w-4 mr-1.5 text-gray-600" />
+                    <span className="text-sm font-medium">
+                      {trip.availableSeats} / {trip.totalSeats} seats available
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleJoinTrip(trip.id)}
+                    disabled={trip.availableSeats === 0}
+                    className={`mt-4 px-4 py-2 rounded-md font-medium transition-colors ${
+                      trip.availableSeats > 0
+                        ? 'bg-primary-600 text-white hover:bg-primary-700'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {trip.availableSeats > 0 ? 'Join Trip' : 'No Seats Available'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    weekday: 'short',
+    month: 'short', 
+    day: 'numeric' 
+  });
+}
+
+function formatTime(timeString: string): string {
+  const [hours, minutes] = timeString.split(':');
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
+}
 
 export default CabPartner;
