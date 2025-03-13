@@ -12,6 +12,10 @@ import Events from "./pages/Events";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 import { ProfileProvider } from "./contexts/ProfileContext";
+import PlacesNearby from "./pages/PlacesNearby";
+import LostFound from "./pages/LostFound";
+import CabPartner from "./pages/CabPartner";
+import AcademicNotes from "./pages/AcademicNotes";
 
 const queryClient = new QueryClient();
 
@@ -28,10 +32,10 @@ const App = () => (
             <Route path="/hostel-complaints" element={<HostelComplaints />} />
             <Route path="/mess-complaints" element={<MessComplaints />} />
             <Route path="/stray-animal" element={<StrayAnimal />} />
-            <Route path="/places-nearby" element={<NotFound />} />
-            <Route path="/lost-found" element={<NotFound />} />
-            <Route path="/cab-partner" element={<NotFound />} />
-            <Route path="/academic-notes" element={<NotFound />} />
+            <Route path="/places-nearby" element={<PlacesNearby />} />
+            <Route path="/lost-found" element={<LostFound />} />
+            <Route path="/cab-partner" element={<CabPartner />} />
+            <Route path="/academic-notes" element={<AcademicNotes />} />
             <Route path="/events" element={<Events />} />
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
