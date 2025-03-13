@@ -17,7 +17,7 @@ const campusPlaces = {
   Vellore: [
     { name: 'Vellore Fort', category: 'Tourist', distance: '8 km', icon: <Building className="h-5 w-5" /> },
     { name: 'CMC Hospital', category: 'Healthcare', distance: '6 km', icon: <Building className="h-5 w-5" /> },
-    { name: 'Hundred's Heritage', category: 'Food', distance: '5 km', icon: <Utensils className="h-5 w-5" /> },
+    { name: "Hundred's Heritage", category: 'Food', distance: '5 km', icon: <Utensils className="h-5 w-5" /> },
     { name: 'Adayar Ananda Bhavan', category: 'Food', distance: '4 km', icon: <Utensils className="h-5 w-5" /> },
     { name: 'Cafe Coffee Day', category: 'Cafe', distance: '3 km', icon: <Coffee className="h-5 w-5" /> },
     { name: 'Fortune Park', category: 'Hotel', distance: '7 km', icon: <Hotel className="h-5 w-5" /> },
