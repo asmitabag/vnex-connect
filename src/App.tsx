@@ -17,6 +17,7 @@ import LostFound from "./pages/LostFound";
 import CabPartner from "./pages/CabPartner";
 import AcademicNotes from "./pages/AcademicNotes";
 import SignIn from "./components/SignIn";
+import MedicalEmergency from "./pages/MedicalEmergency";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +33,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => {
-  const { isAuthenticated } = useProfile();
+  const { isAuthenticated, profileType } = useProfile();
   
   return (
     <>
@@ -43,6 +44,7 @@ const AppRoutes = () => {
         <Route path="/hostel-complaints" element={<ProtectedRoute><HostelComplaints /></ProtectedRoute>} />
         <Route path="/mess-complaints" element={<ProtectedRoute><MessComplaints /></ProtectedRoute>} />
         <Route path="/stray-animal" element={<ProtectedRoute><StrayAnimal /></ProtectedRoute>} />
+        <Route path="/medical-emergency" element={<ProtectedRoute><MedicalEmergency /></ProtectedRoute>} />
         <Route path="/places-nearby" element={<ProtectedRoute><PlacesNearby /></ProtectedRoute>} />
         <Route path="/lost-found" element={<ProtectedRoute><LostFound /></ProtectedRoute>} />
         <Route path="/cab-partner" element={<ProtectedRoute><CabPartner /></ProtectedRoute>} />

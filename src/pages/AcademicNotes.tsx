@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
-import { BookOpen, Upload, Download, FileText, Search, Filter } from 'lucide-react';
+import { BookOpen, Upload, Download, FileText, Search, Filter, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,13 +14,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-interface Note {
+interface NoteFile {
   id: string;
   title: string;
-  course: string;
-  subject: string;
-  semester: string;
   uploadedBy: string;
   uploadDate: string;
   downloads: number;
@@ -28,94 +26,169 @@ interface Note {
   fileType: string;
 }
 
+interface Subject {
+  id: string;
+  name: string;
+  course: string;
+  semester: string;
+  files: NoteFile[];
+}
+
 const AcademicNotes = () => {
   const { campus, profileType } = useProfile();
   const { toast } = useToast();
   const [openDialog, setOpenDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [notes, setNotes] = useState<Note[]>([
+  const [subjects, setSubjects] = useState<Subject[]>([
     {
       id: '1',
-      title: 'Data Structures and Algorithms Notes',
+      name: 'Data Structures',
       course: 'Computer Science',
-      subject: 'Data Structures',
       semester: '3',
-      uploadedBy: 'Prof. Sharma',
-      uploadDate: '2023-09-15',
-      downloads: 127,
-      fileSize: '2.4 MB',
-      fileType: 'PDF'
+      files: [
+        {
+          id: '1-1',
+          title: 'Data Structures and Algorithms Notes',
+          uploadedBy: 'Prof. Sharma',
+          uploadDate: '2025-01-15',
+          downloads: 127,
+          fileSize: '2.4 MB',
+          fileType: 'PDF'
+        }
+      ]
     },
     {
       id: '2',
-      title: 'Thermodynamics Complete Guide',
+      name: 'Thermodynamics',
       course: 'Mechanical Engineering',
-      subject: 'Thermodynamics',
       semester: '4',
-      uploadedBy: 'Dr. Patel',
-      uploadDate: '2023-08-22',
-      downloads: 89,
-      fileSize: '3.7 MB',
-      fileType: 'PDF'
+      files: [
+        {
+          id: '2-1',
+          title: 'Thermodynamics Complete Guide',
+          uploadedBy: 'Dr. Patel',
+          uploadDate: '2025-02-22',
+          downloads: 89,
+          fileSize: '3.7 MB',
+          fileType: 'PDF'
+        }
+      ]
     },
     {
       id: '3',
-      title: 'DBMS Tutorial & Sample Questions',
+      name: 'Database Management',
       course: 'Computer Science',
-      subject: 'Database Management',
       semester: '5',
-      uploadedBy: 'Prof. Kumar',
-      uploadDate: '2023-10-01',
-      downloads: 156,
-      fileSize: '1.8 MB',
-      fileType: 'PDF'
+      files: [
+        {
+          id: '3-1',
+          title: 'DBMS Tutorial & Sample Questions',
+          uploadedBy: 'Prof. Kumar',
+          uploadDate: '2025-03-01',
+          downloads: 156,
+          fileSize: '1.8 MB',
+          fileType: 'PDF'
+        }
+      ]
     }
   ]);
   
-  const [newNote, setNewNote] = useState<Omit<Note, 'id' | 'downloads'>>({
+  const [newNote, setNewNote] = useState({
     title: '',
-    course: '',
     subject: '',
+    course: '',
     semester: '',
     uploadedBy: '',
     uploadDate: new Date().toISOString().split('T')[0],
     fileSize: '',
-    fileType: 'PDF'
+    fileType: 'PDF',
+    existingSubjectId: ''
   });
+
+  const [isAddingToExisting, setIsAddingToExisting] = useState(false);
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewNote(prev => ({ ...prev, [name]: value }));
   };
 
+  const toggleSubjectExpand = (subjectId: string) => {
+    setExpandedSubjects(prev => ({
+      ...prev,
+      [subjectId]: !prev[subjectId]
+    }));
+  };
+
   const addNote = () => {
-    if (!newNote.title || !newNote.course || !newNote.subject) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
+    if (isAddingToExisting) {
+      if (!newNote.existingSubjectId || !newNote.title) {
+        toast({
+          title: "Missing Information",
+          description: "Please select a subject and provide a title",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newFile = {
+        id: `${Date.now()}`,
+        title: newNote.title,
+        uploadedBy: newNote.uploadedBy,
+        uploadDate: newNote.uploadDate,
+        downloads: 0,
+        fileSize: newNote.fileSize,
+        fileType: newNote.fileType
+      };
+
+      setSubjects(prev => prev.map(subject => 
+        subject.id === newNote.existingSubjectId
+          ? { ...subject, files: [...subject.files, newFile] }
+          : subject
+      ));
+
+    } else {
+      if (!newNote.subject || !newNote.course || !newNote.title) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newSubject = {
+        id: `${Date.now()}`,
+        name: newNote.subject,
+        course: newNote.course,
+        semester: newNote.semester,
+        files: [{
+          id: `${Date.now()}-1`,
+          title: newNote.title,
+          uploadedBy: newNote.uploadedBy,
+          uploadDate: newNote.uploadDate,
+          downloads: 0,
+          fileSize: newNote.fileSize,
+          fileType: newNote.fileType
+        }]
+      };
+
+      setSubjects(prev => [...prev, newSubject]);
     }
 
-    const newNoteWithId = {
-      ...newNote,
-      id: `${Date.now()}`,
-      downloads: 0,
-    };
-
-    setNotes(prev => [...prev, newNoteWithId]);
     setOpenDialog(false);
     setNewNote({
       title: '',
-      course: '',
       subject: '',
+      course: '',
       semester: '',
       uploadedBy: '',
       uploadDate: new Date().toISOString().split('T')[0],
       fileSize: '',
-      fileType: 'PDF'
+      fileType: 'PDF',
+      existingSubjectId: ''
     });
+    setIsAddingToExisting(false);
 
     toast({
       title: "Note Added",
@@ -123,14 +196,20 @@ const AcademicNotes = () => {
     });
   };
 
-  const handleDownload = (noteId: string) => {
-    // In a real app, this would trigger a file download
-    // For now, we'll just update the download count
-    setNotes(prev => 
-      prev.map(note => 
-        note.id === noteId 
-          ? { ...note, downloads: note.downloads + 1 } 
-          : note
+  const handleDownload = (subjectId: string, fileId: string) => {
+    // Update the download count for the specific file
+    setSubjects(prev => 
+      prev.map(subject => 
+        subject.id === subjectId
+          ? {
+              ...subject,
+              files: subject.files.map(file => 
+                file.id === fileId
+                  ? { ...file, downloads: file.downloads + 1 }
+                  : file
+              )
+            }
+          : subject
       )
     );
     
@@ -140,13 +219,15 @@ const AcademicNotes = () => {
     });
   };
 
-  const filteredNotes = searchTerm 
-    ? notes.filter(note => 
-        note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.course.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSubjects = searchTerm 
+    ? subjects.filter(subject => 
+        subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subject.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subject.files.some(file => 
+          file.title.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       )
-    : notes;
+    : subjects;
 
   return (
     <div className="vnex-container py-12">
@@ -179,7 +260,7 @@ const AcademicNotes = () => {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search by title, subject or course..."
+                placeholder="Search by subject, course or note title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -188,7 +269,7 @@ const AcademicNotes = () => {
           </div>
         </div>
         
-        {filteredNotes.length === 0 ? (
+        {filteredSubjects.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-600">No notes found</h3>
@@ -200,44 +281,84 @@ const AcademicNotes = () => {
           </div>
         ) : (
           <div className="grid gap-6">
-            {filteredNotes.map(note => (
-              <div key={note.id} className="vnex-card hover:shadow-md transition-shadow">
+            {filteredSubjects.map(subject => (
+              <Collapsible 
+                key={subject.id} 
+                open={expandedSubjects[subject.id]} 
+                onOpenChange={() => toggleSubjectExpand(subject.id)}
+                className="vnex-card hover:shadow-md transition-shadow"
+              >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-xl font-semibold">{note.title}</h2>
+                    <h2 className="text-xl font-semibold">{subject.name}</h2>
                     <div className="flex flex-wrap gap-2 mt-2">
                       <span className="bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full text-sm font-medium">
-                        {note.course}
+                        {subject.course}
                       </span>
                       <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-sm font-medium">
-                        {note.subject}
+                        Semester {subject.semester}
                       </span>
                       <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-sm font-medium">
-                        Semester {note.semester}
+                        {subject.files.length} {subject.files.length === 1 ? 'file' : 'files'}
                       </span>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDownload(note.id)}
-                    className="flex items-center gap-1"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsAddingToExisting(true);
+                        setNewNote(prev => ({ ...prev, existingSubjectId: subject.id }));
+                        setOpenDialog(true);
+                      }}
+                      className="flex items-center gap-1"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Note
+                    </Button>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        {expandedSubjects[subject.id] ? 
+                          <ChevronUp className="h-4 w-4" /> : 
+                          <ChevronDown className="h-4 w-4" />
+                        }
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
-                  <div>
-                    Uploaded by {note.uploadedBy} on {new Date(note.uploadDate).toLocaleDateString()}
+                <CollapsibleContent>
+                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+                    {subject.files.map(file => (
+                      <div key={file.id} className="p-4 bg-gray-50 rounded-md">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium">{file.title}</h3>
+                            <div className="mt-1 text-sm text-gray-500">
+                              Uploaded by {file.uploadedBy} on {new Date(file.uploadDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDownload(subject.id, file.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download
+                          </Button>
+                        </div>
+                        <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                          <span>{file.fileType} · {file.fileSize}</span>
+                          <span>{file.downloads} downloads</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span>{note.fileType} · {note.fileSize}</span>
-                    <span>{note.downloads} downloads</span>
-                  </div>
-                </div>
-              </div>
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </div>
         )}
@@ -247,15 +368,73 @@ const AcademicNotes = () => {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Upload Academic Notes</DialogTitle>
+            <DialogTitle>
+              {isAddingToExisting ? "Add Note to Existing Subject" : "Upload New Academic Notes"}
+            </DialogTitle>
             <DialogDescription>
               Share your notes and study materials with other students.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
+            {isAddingToExisting ? (
+              <div>
+                <Label>Selected Subject</Label>
+                <div className="mt-1 p-2 bg-gray-50 rounded-md">
+                  {subjects.find(s => s.id === newNote.existingSubjectId)?.name || "Select a subject"}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <Label htmlFor="subject">Subject Name *</Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    value={newNote.subject}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Machine Learning"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="course">Course *</Label>
+                    <Input
+                      id="course"
+                      name="course"
+                      value={newNote.course}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Computer Science"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="semester">Semester</Label>
+                    <select
+                      id="semester"
+                      name="semester"
+                      value={newNote.semester}
+                      onChange={handleInputChange}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Select Semester</option>
+                      <option value="1">Semester 1</option>
+                      <option value="2">Semester 2</option>
+                      <option value="3">Semester 3</option>
+                      <option value="4">Semester 4</option>
+                      <option value="5">Semester 5</option>
+                      <option value="6">Semester 6</option>
+                      <option value="7">Semester 7</option>
+                      <option value="8">Semester 8</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+            
             <div>
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Note Title *</Label>
               <Input
                 id="title"
                 name="title"
@@ -265,52 +444,7 @@ const AcademicNotes = () => {
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="course">Course *</Label>
-                <Input
-                  id="course"
-                  name="course"
-                  value={newNote.course}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Computer Science"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="subject">Subject *</Label>
-                <Input
-                  id="subject"
-                  name="subject"
-                  value={newNote.subject}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Artificial Intelligence"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="semester">Semester</Label>
-                <select
-                  id="semester"
-                  name="semester"
-                  value={newNote.semester}
-                  onChange={handleInputChange}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Select Semester</option>
-                  <option value="1">Semester 1</option>
-                  <option value="2">Semester 2</option>
-                  <option value="3">Semester 3</option>
-                  <option value="4">Semester 4</option>
-                  <option value="5">Semester 5</option>
-                  <option value="6">Semester 6</option>
-                  <option value="7">Semester 7</option>
-                  <option value="8">Semester 8</option>
-                </select>
-              </div>
-              
+            <div className="grid grid-cols-2 gap-4">  
               <div>
                 <Label htmlFor="fileType">File Type</Label>
                 <select
@@ -326,9 +460,7 @@ const AcademicNotes = () => {
                   <option value="ZIP">ZIP</option>
                 </select>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+              
               <div>
                 <Label htmlFor="uploadedBy">Uploaded By</Label>
                 <Input
@@ -339,17 +471,17 @@ const AcademicNotes = () => {
                   placeholder="Your Name"
                 />
               </div>
-              
-              <div>
-                <Label htmlFor="fileSize">File Size</Label>
-                <Input
-                  id="fileSize"
-                  name="fileSize"
-                  value={newNote.fileSize}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 2.4 MB"
-                />
-              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="fileSize">File Size</Label>
+              <Input
+                id="fileSize"
+                name="fileSize"
+                value={newNote.fileSize}
+                onChange={handleInputChange}
+                placeholder="e.g., 2.4 MB"
+              />
             </div>
             
             <div>
@@ -376,7 +508,15 @@ const AcademicNotes = () => {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setOpenDialog(false);
+                setIsAddingToExisting(false);
+              }}
+            >
+              Cancel
+            </Button>
             <Button onClick={addNote}>Upload Notes</Button>
           </DialogFooter>
         </DialogContent>

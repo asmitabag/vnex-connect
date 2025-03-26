@@ -74,16 +74,8 @@ const Index = () => {
               <span className="block text-2xl md:text-3xl mt-2 font-normal">Connecting Students with Solutions</span>
             </h1>
             <p className="text-lg md:text-xl opacity-90 mb-8">
-              A one-stop platform to streamline campus life at VIT Chennai. Raise complaints, find resources, connect with peers, and stay updated.
+              A one-stop platform to streamline campus life at VIT. Raise complaints, find resources, connect with peers, and stay updated.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/hostel-complaints" className="bg-white text-primary-800 hover:bg-gray-100 font-semibold px-6 py-3 rounded-lg shadow-lg transition-colors">
-                Report a Complaint
-              </Link>
-              <Link to="/places-nearby" className="bg-primary-700 hover:bg-primary-600 border border-white/20 font-semibold px-6 py-3 rounded-lg shadow-lg transition-colors">
-                Explore Nearby Places
-              </Link>
-            </div>
           </div>
         </div>
         
@@ -127,12 +119,6 @@ const Index = () => {
             <p className="text-lg text-gray-600 mb-8">
               Join VIT Nexus today and connect with solutions to make your college life easier and better.
             </p>
-            <Link 
-              to="/hostel-complaints" 
-              className="vnex-button-primary inline-block px-8 py-3 text-lg"
-            >
-              Get Started
-            </Link>
           </div>
         </div>
       </div>

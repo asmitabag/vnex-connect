@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap, Building } from 'lucide-react';
+import { GraduationCap, Building, Stethoscope } from 'lucide-react';
 
 const ProfileSelector = () => {
   const { toast } = useToast();
@@ -28,23 +28,27 @@ const ProfileSelector = () => {
   const [selectedCampus, setSelectedCampus] = useState<string | undefined>(undefined);
 
   const handleSubmit = () => {
-    if (!selectedProfile || !selectedCampus) {
+    if (!selectedProfile || (selectedProfile !== 'hospital' && !selectedCampus)) {
       toast({
         title: "Selection required",
-        description: "Please select both profile type and campus",
+        description: selectedProfile === 'hospital' 
+          ? "Please select a profile type" 
+          : "Please select both profile type and campus",
         variant: "destructive"
       });
       return;
     }
 
     setProfileType(selectedProfile as any);
-    setCampus(selectedCampus as any);
+    setCampus(selectedProfile === 'hospital' ? 'Chennai' : selectedCampus as any);
     setIsAuthenticated(true);
     setOpen(false);
     
     toast({
       title: "Profile set successfully",
-      description: `You're now using VIT Nexus as a ${selectedProfile} in the ${selectedCampus} campus`,
+      description: selectedProfile === 'hospital'
+        ? "You're now using VIT Nexus as Apollo Hospital staff"
+        : `You're now using VIT Nexus as a ${selectedProfile} in the ${selectedCampus} campus`,
     });
   };
 
@@ -59,10 +63,12 @@ const ProfileSelector = () => {
           <GraduationCap className="h-4 w-4" />
         ) : profileType === 'faculty' ? (
           <Building className="h-4 w-4" />
+        ) : profileType === 'hospital' ? (
+          <Stethoscope className="h-4 w-4" />
         ) : null}
         {isAuthenticated ? (
           <>
-            {profileType} | {campus}
+            {profileType === 'hospital' ? 'Apollo Hospital Staff' : `${profileType} | ${campus}`}
           </>
         ) : 'Set Profile'}
       </Button>
@@ -81,7 +87,12 @@ const ProfileSelector = () => {
               <label className="text-sm font-medium">Profile Type</label>
               <Select
                 value={selectedProfile}
-                onValueChange={setSelectedProfile}
+                onValueChange={(value) => {
+                  setSelectedProfile(value);
+                  if (value === 'hospital') {
+                    setSelectedCampus('Chennai');
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select profile type" />
@@ -89,27 +100,30 @@ const ProfileSelector = () => {
                 <SelectContent>
                   <SelectItem value="student">Student</SelectItem>
                   <SelectItem value="faculty">Faculty</SelectItem>
+                  <SelectItem value="hospital">Apollo Hospital Staff</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Campus</label>
-              <Select
-                value={selectedCampus}
-                onValueChange={setSelectedCampus}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select campus" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Chennai">Chennai</SelectItem>
-                  <SelectItem value="Vellore">Vellore</SelectItem>
-                  <SelectItem value="Bhopal">Bhopal</SelectItem>
-                  <SelectItem value="Amaravati">Amaravati</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {selectedProfile !== 'hospital' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Campus</label>
+                <Select
+                  value={selectedCampus}
+                  onValueChange={setSelectedCampus}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select campus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Chennai">Chennai</SelectItem>
+                    <SelectItem value="Vellore">Vellore</SelectItem>
+                    <SelectItem value="Bhopal">Bhopal</SelectItem>
+                    <SelectItem value="Amaravati">Amaravati</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           
           <DialogFooter>

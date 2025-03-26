@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type ProfileType = 'student' | 'faculty' | null;
+export type ProfileType = 'student' | 'faculty' | 'hospital' | null;
 export type CampusType = 'Chennai' | 'Vellore' | 'Bhopal' | 'Amaravati' | null;
 
 interface ProfileContextType {

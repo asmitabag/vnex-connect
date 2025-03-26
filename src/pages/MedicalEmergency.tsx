@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MapPinOff, Send, User, MapPin, Phone, Calendar, Clock, Building, Camera, Upload } from "lucide-react";
+import { User, MapPin, Phone, Calendar, Clock, AlertCircle, Camera, Upload } from "lucide-react";
 import { z } from "zod";
 
 import {
@@ -20,25 +20,27 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "../contexts/ProfileContext";
 
-const strayAnimalSchema = z.object({
+const medicalEmergencySchema = z.object({
+  patientName: z.string().min(1, "Patient name is required"),
   description: z.string().min(1, "Description is required"),
   location: z.string().min(1, "Location is required"),
   contactName: z.string().min(1, "Contact name is required"),
   contactInfo: z.string().min(1, "Contact information is required"),
 });
 
-type StrayAnimalForm = z.infer<typeof strayAnimalSchema>;
+type MedicalEmergencyForm = z.infer<typeof medicalEmergencySchema>;
 
-const StrayAnimal = () => {
+const MedicalEmergency = () => {
   const { campus, profileType } = useProfile();
   const { toast } = useToast();
-  const [animals, setAnimals] = useState<any[]>([]);
+  const [emergencies, setEmergencies] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const form = useForm<StrayAnimalForm>({
-    resolver: zodResolver(strayAnimalSchema),
+  const form = useForm<MedicalEmergencyForm>({
+    resolver: zodResolver(medicalEmergencySchema),
     defaultValues: {
+      patientName: "",
       description: "",
       location: "",
       contactName: "",
@@ -57,12 +59,12 @@ const StrayAnimal = () => {
     }
   };
 
-  const onSubmit = async (data: StrayAnimalForm) => {
+  const onSubmit = async (data: MedicalEmergencyForm) => {
     setIsSubmitting(true);
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setAnimals((prev) => [
+      setEmergencies((prev) => [
         ...prev, 
         { 
           ...data, 
@@ -70,19 +72,18 @@ const StrayAnimal = () => {
           imageUrl: imagePreview,
           reportedAt: new Date().toISOString(),
           status: "Pending",
-          response: ""
         }
       ]);
       form.reset();
       setImagePreview(null);
       toast({
         title: "Success",
-        description: "Stray animal reported successfully.",
+        description: "Medical emergency reported successfully.",
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to report stray animal.",
+        description: "Failed to report medical emergency.",
         variant: "destructive",
       });
     } finally {
@@ -94,19 +95,19 @@ const StrayAnimal = () => {
     <div className="vnex-container py-12">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 flex items-center">
-          <MapPinOff className="mr-2 h-8 w-8 text-primary-600" />
-          Report Stray Animal
+          <AlertCircle className="mr-2 h-8 w-8 text-red-500" />
+          Report Medical Emergency
         </h1>
         
         {profileType === 'hospital' ? (
           <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
             <p className="text-blue-700">
-              As an Apollo staff member, you can view and respond to stray animal reports on campus.
+              As an Apollo staff member, you can view and respond to medical emergencies reported on campus.
             </p>
           </div>
         ) : (
           <p className="text-gray-600 mb-6">
-            Use this form to report injured, malnourished, or stray animals on campus. Animal welfare staff will be notified.
+            Use this form to report medical emergencies involving students, faculty, or staff at VIT. Medical staff will be notified immediately.
           </p>
         )}
 
@@ -114,13 +115,13 @@ const StrayAnimal = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormItem>
-                <FormLabel>Upload Image</FormLabel>
+                <FormLabel>Upload Image (Optional)</FormLabel>
                 <div className="flex flex-col items-center justify-center space-y-2">
                   {imagePreview ? (
                     <div className="relative">
                       <img
                         src={imagePreview}
-                        alt="Animal preview"
+                        alt="Emergency situation"
                         className="h-48 w-auto object-cover rounded-md"
                       />
                       <Button
@@ -154,16 +155,23 @@ const StrayAnimal = () => {
                 </div>
               </FormItem>
               <FormItem>
+                <FormLabel>Patient Name</FormLabel>
+                <FormControl>
+                  <Input {...form.register("patientName")} placeholder="Enter patient's name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+              <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea {...form.register("description")} placeholder="Describe the animal's condition, breed, color, etc." />
+                  <Textarea {...form.register("description")} placeholder="Describe the emergency situation, symptoms, etc." />
                 </FormControl>
                 <FormMessage />
               </FormItem>
               <FormItem>
                 <FormLabel>Location</FormLabel>
                 <FormControl>
-                  <Input {...form.register("location")} placeholder="Where did you find the animal?" />
+                  <Input {...form.register("location")} placeholder="Where is the emergency? (Building, room, etc.)" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -181,138 +189,79 @@ const StrayAnimal = () => {
                 </FormControl>
                 <FormMessage />
               </FormItem>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Report"}
+              <Button type="submit" className="bg-red-600 hover:bg-red-700" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit Emergency Report"}
               </Button>
             </form>
           </Form>
         )}
 
         <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Reported Animals</h2>
-          {animals.length === 0 ? (
-            <p>No stray animals reported yet.</p>
+          <h2 className="text-2xl font-bold mb-4">Recent Reports</h2>
+          {emergencies.length === 0 ? (
+            <p>No medical emergencies reported recently.</p>
           ) : (
             <div className="space-y-4">
-              {animals.map((animal) => (
-                <div key={animal.id} className="vnex-card hover:shadow-md transition-shadow">
+              {emergencies.map((emergency) => (
+                <div key={emergency.id} className="vnex-card hover:shadow-md transition-shadow border-l-4 border-red-500">
                   <div className="flex flex-col md:flex-row gap-4">
-                    {animal.imageUrl && (
+                    {emergency.imageUrl && (
                       <div className="md:w-1/3">
                         <img
-                          src={animal.imageUrl}
-                          alt="Reported animal"
+                          src={emergency.imageUrl}
+                          alt="Emergency situation"
                           className="w-full h-48 object-cover rounded-md"
                         />
                       </div>
                     )}
-                    <div className={animal.imageUrl ? "md:w-2/3" : "w-full"}>
+                    <div className={emergency.imageUrl ? "md:w-2/3" : "w-full"}>
                       <div className="flex justify-between items-start">
-                        <p className="font-medium text-lg mb-2">{animal.description}</p>
+                        <h3 className="font-medium text-lg">{emergency.patientName}</h3>
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          animal.status === "Attended" 
+                          emergency.status === "Resolved" 
                             ? "bg-green-100 text-green-800" 
                             : "bg-amber-100 text-amber-800"
                         }`}>
-                          {animal.status}
+                          {emergency.status}
                         </span>
                       </div>
-                      <div className="space-y-1 text-gray-600">
+                      <p className="mt-2">{emergency.description}</p>
+                      <div className="mt-3 space-y-1 text-gray-600">
                         <p className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" /> {animal.location}
+                          <MapPin className="h-4 w-4" /> {emergency.location}
                         </p>
                         <p className="flex items-center gap-1">
-                          <User className="h-4 w-4" /> {animal.contactName}
+                          <User className="h-4 w-4" /> Reported by: {emergency.contactName}
                         </p>
                         <p className="flex items-center gap-1">
-                          <Phone className="h-4 w-4" /> {animal.contactInfo}
+                          <Phone className="h-4 w-4" /> {emergency.contactInfo}
                         </p>
                         <p className="flex items-center gap-1 text-sm text-gray-500">
-                          <Calendar className="h-4 w-4" /> Reported on {new Date(animal.reportedAt).toLocaleDateString()}
+                          <Calendar className="h-4 w-4" /> Reported on {new Date(emergency.reportedAt).toLocaleDateString()} at {new Date(emergency.reportedAt).toLocaleTimeString()}
                         </p>
                       </div>
-
-                      {animal.response && (
-                        <div className="mt-4 p-3 bg-blue-50 rounded-md">
-                          <h4 className="font-medium text-blue-800">Response from Apollo Hospital:</h4>
-                          <p className="mt-1 text-blue-700">{animal.response}</p>
-                        </div>
-                      )}
 
                       {profileType === 'hospital' && (
                         <div className="mt-4 pt-3 border-t border-gray-100">
-                          <div className="space-y-3">
-                            <textarea 
-                              className="w-full p-2 border rounded-md"
-                              placeholder="Add your response here..."
-                              value={animal.tempResponse || ""}
-                              onChange={(e) => {
-                                setAnimals(prev => 
-                                  prev.map(a => 
-                                    a.id === animal.id 
-                                      ? { ...a, tempResponse: e.target.value } 
-                                      : a
-                                  )
-                                );
-                              }}
-                            />
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="default"
-                                size="sm"
-                                onClick={() => {
-                                  if (!animal.tempResponse?.trim()) {
-                                    toast({
-                                      title: "Response required",
-                                      description: "Please add a response before submitting",
-                                      variant: "destructive"
-                                    });
-                                    return;
-                                  }
-                                  
-                                  setAnimals(prev => 
-                                    prev.map(a => 
-                                      a.id === animal.id 
-                                        ? { 
-                                            ...a, 
-                                            response: a.tempResponse, 
-                                            tempResponse: "",
-                                            status: "Attended"
-                                          } 
-                                        : a
-                                    )
-                                  );
-                                  
-                                  toast({
-                                    title: "Response submitted",
-                                    description: "Your response has been added to the report",
-                                  });
-                                }}
-                              >
-                                Submit Response
-                              </Button>
-                              <Button 
-                                variant={animal.status === "Attended" ? "outline" : "default"}
-                                size="sm"
-                                onClick={() => {
-                                  setAnimals(prev => 
-                                    prev.map(a => 
-                                      a.id === animal.id 
-                                        ? { ...a, status: a.status === "Pending" ? "Attended" : "Pending" } 
-                                        : a
-                                    )
-                                  );
-                                  
-                                  toast({
-                                    title: animal.status === "Pending" ? "Marked as attended" : "Marked as pending",
-                                    description: `Report status has been updated.`,
-                                  });
-                                }}
-                              >
-                                Mark as {animal.status === "Attended" ? "Pending" : "Attended"}
-                              </Button>
-                            </div>
-                          </div>
+                          <Button 
+                            variant={emergency.status === "Resolved" ? "outline" : "default"}
+                            size="sm"
+                            onClick={() => {
+                              setEmergencies(prev => 
+                                prev.map(e => 
+                                  e.id === emergency.id 
+                                    ? { ...e, status: e.status === "Pending" ? "Resolved" : "Pending" } 
+                                    : e
+                                )
+                              );
+                              toast({
+                                title: emergency.status === "Pending" ? "Marked as resolved" : "Marked as pending",
+                                description: `Emergency report has been updated.`,
+                              });
+                            }}
+                          >
+                            {emergency.status === "Resolved" ? "Mark as Pending" : "Mark as Resolved"}
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -327,4 +276,4 @@ const StrayAnimal = () => {
   );
 };
 
-export default StrayAnimal;
+export default MedicalEmergency;
