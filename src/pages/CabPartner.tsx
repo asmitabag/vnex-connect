@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
-import { Car, Search, MapPin, Calendar, Clock, User, Phone, Building } from 'lucide-react';
+import { Car, Search, MapPin, Calendar, Clock, User, Phone, Building, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
