@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
 import { Car, Search, MapPin, Calendar, Clock, User, Phone, Building, Plus } from 'lucide-react';
@@ -27,6 +26,13 @@ interface RideShare {
   notes: string;
 }
 
+// Helper function to get a future date
+const getFutureDate = (daysFromNow: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+};
+
 const CabPartner = () => {
   const { campus } = useProfile();
   const { toast } = useToast();
@@ -36,7 +42,7 @@ const CabPartner = () => {
       id: '1',
       startLocation: 'VIT Campus',
       destination: 'Airport',
-      date: '2023-11-10',
+      date: getFutureDate(5), // 5 days from now
       time: '14:00',
       seatsAvailable: 3,
       contactName: 'Alex Johnson',
@@ -47,7 +53,7 @@ const CabPartner = () => {
       id: '2',
       startLocation: 'Railway Station',
       destination: 'VIT Campus',
-      date: '2023-11-12',
+      date: getFutureDate(7), // 7 days from now
       time: '10:30',
       seatsAvailable: 2,
       contactName: 'Priya Sharma',
@@ -109,6 +115,7 @@ const CabPartner = () => {
     });
   };
 
+  
   return (
     <div className="vnex-container py-12">
       <div className="max-w-4xl mx-auto">
@@ -244,6 +251,7 @@ const CabPartner = () => {
                   type="date"
                   value={newRide.date}
                   onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]} // Set min date to today
                 />
               </div>
               

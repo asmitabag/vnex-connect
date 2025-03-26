@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
 import { Building, Calendar, Link as LinkIcon, Plus, User, Phone, MapPin, Clock, Info, Upload } from 'lucide-react';
@@ -16,23 +15,31 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
-// Define campus-specific venues
+// Define campus-specific venues - use real academic blocks and auditoriums
 const campusVenues = {
   Chennai: [
     "Main Auditorium", "Mini Auditorium", "Silver Jubilee Tower", "Technology Tower", 
-    "Men's Hostel Grounds", "Women's Hostel Grounds", "GD Naidu Hall", "Anna Auditorium"
+    "Men's Hostel Grounds", "Women's Hostel Grounds", "GD Naidu Hall", "Anna Auditorium",
+    "Dr. M.G.R. Block", "Thiruvalluvar Block", "Kamarajar Block", "Periyar Block",
+    "Academic Block 1", "Academic Block 2", "Central Library", "Convention Centre"
   ],
   Vellore: [
     "Anna Auditorium", "Library Conference Hall", "TT Gallery", "Amphitheater", 
-    "Main Building", "SJT Auditorium", "SMV Auditorium", "MBA Block"
+    "Main Building", "SJT Auditorium", "SMV Auditorium", "MBA Block",
+    "Technology Tower", "Silver Jubilee Tower", "Dr. APJ Abdul Kalam Hall", "Dr. CV Raman Hall",
+    "Sir M Visvesvaraya Block", "Vikram Sarabhai Block", "Homi J Bhabha Block", "Main Auditorium"
   ],
   Bhopal: [
     "Main Auditorium", "Seminar Hall", "Open Air Theatre", "Academic Block A", 
-    "Academic Block B", "Central Lawn", "Sports Complex", "Convention Centre"
+    "Academic Block B", "Central Lawn", "Sports Complex", "Convention Centre",
+    "Dr. APJ Abdul Kalam Block", "Sir CV Raman Block", "Dr. Homi J Bhabha Block", "Einstein Block",
+    "Newton Block", "Main Auditorium", "CDMM Auditorium", "Central Library"
   ],
   Amaravati: [
     "Central Auditorium", "Multi-Purpose Hall", "Academic Block 1", "Academic Block 2",
-    "Open Theatre", "Main Grounds", "Indoor Stadium", "Administration Block"
+    "Open Theatre", "Main Grounds", "Indoor Stadium", "Administration Block",
+    "Dr. Sarvepalli Radhakrishnan Block", "Sir CV Raman Block", "Mokshagundam Visvesvaraya Block",
+    "Main Auditorium", "Seminar Hall A", "Seminar Hall B", "Central Library", "Sports Complex"
   ]
 };
 
@@ -42,6 +49,14 @@ const registrationLinks = {
   Vellore: "https://events.vit.ac.in/vellore/register",
   Bhopal: "https://events.vit.ac.in/bhopal/register",
   Amaravati: "https://events.vit.ac.in/amaravati/register"
+};
+
+// Helper function to get a future date
+const getFutureDate = (daysFromNow: number): string => {
+  const date = new Date();
+  date.setFullYear(2025); // Set to 2025
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
 };
 
 interface Event {
@@ -67,9 +82,9 @@ const Events = () => {
   const [events, setEvents] = useState<Event[]>([
     {
       id: '1',
-      title: 'Tech Symposium 2023',
+      title: 'Tech Symposium 2025',
       description: 'Annual technical symposium featuring competitions, workshops, and guest lectures.',
-      date: '2023-11-15',
+      date: getFutureDate(30), // 30 days from now, in 2025
       time: '09:00 AM',
       venue: 'Main Auditorium',
       registrationLink: 'https://events.vit.ac.in/register',
@@ -82,9 +97,9 @@ const Events = () => {
     },
     {
       id: '2',
-      title: 'Cultural Fest',
+      title: 'Cultural Fest 2025',
       description: 'Annual cultural festival with music, dance, and drama performances.',
-      date: '2023-12-10',
+      date: getFutureDate(60), // 60 days from now, in 2025
       time: '05:00 PM',
       venue: 'Open Air Theatre',
       registrationLink: 'https://events.vit.ac.in/register',
@@ -312,6 +327,7 @@ const Events = () => {
                   type="date"
                   value={newEvent.date}
                   onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]} // Set min date to today
                 />
               </div>
               
