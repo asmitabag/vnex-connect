@@ -15,10 +15,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
-// Define campus-specific venues - use real academic blocks and auditoriums
+// Define campus-specific venues - updated with more realistic academic venues
 const campusVenues = {
   Chennai: [
-    "Main Auditorium", "Mini Auditorium", "Silver Jubilee Tower", "Technology Tower", 
+    "MG Auditorium", "Football Ground", "Netaji Auditorium", "Silver Jubilee Tower", 
     "Men's Hostel Grounds", "Women's Hostel Grounds", "GD Naidu Hall", "Anna Auditorium",
     "Dr. M.G.R. Block", "Thiruvalluvar Block", "Kamarajar Block", "Periyar Block",
     "Academic Block 1", "Academic Block 2", "Central Library", "Convention Centre"
@@ -43,9 +43,9 @@ const campusVenues = {
   ]
 };
 
-// Define campus-specific registration links
+// Define campus-specific registration links - updated Chennai link
 const registrationLinks = {
-  Chennai: "https://events.vit.ac.in/chennai/register",
+  Chennai: "https://vitchennaievents.com/conf1/",
   Vellore: "https://events.vit.ac.in/vellore/register",
   Bhopal: "https://events.vit.ac.in/bhopal/register",
   Amaravati: "https://events.vit.ac.in/amaravati/register"

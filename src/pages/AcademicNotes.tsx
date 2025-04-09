@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
-import { BookOpen, Upload, Download, FileText, Search, Filter, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { File, Book, Upload, Camera, Plus, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,510 +14,497 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import CameraCapture from '@/components/CameraCapture';
 
 interface NoteFile {
   id: string;
-  title: string;
-  uploadedBy: string;
+  name: string;
+  uploader: string;
   uploadDate: string;
-  downloads: number;
-  fileSize: string;
-  fileType: string;
+  fileUrl: string;
+  size: string;
 }
 
 interface Subject {
   id: string;
   name: string;
-  course: string;
-  semester: string;
+  code: string;
   files: NoteFile[];
+  isExpanded: boolean;
 }
 
-const AcademicNotes = () => {
-  const { campus, profileType } = useProfile();
+const AcademicNotes: React.FC = () => {
+  const { profileType, campus } = useProfile();
   const { toast } = useToast();
   const [openDialog, setOpenDialog] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [subjects, setSubjects] = useState<Subject[]>([
     {
       id: '1',
-      name: 'Data Structures',
-      course: 'Computer Science',
-      semester: '3',
+      name: 'Data Structures and Algorithms',
+      code: 'CSE2003',
+      isExpanded: false,
       files: [
         {
-          id: '1-1',
-          title: 'Data Structures and Algorithms Notes',
-          uploadedBy: 'Prof. Sharma',
+          id: '1',
+          name: 'Sorting Algorithms.pdf',
+          uploader: 'Dr. Anand Kumar',
           uploadDate: '2025-01-15',
-          downloads: 127,
-          fileSize: '2.4 MB',
-          fileType: 'PDF'
+          fileUrl: '#',
+          size: '2.4 MB'
+        },
+        {
+          id: '2',
+          name: 'Graph Algorithms.pdf',
+          uploader: 'Dr. Anand Kumar',
+          uploadDate: '2025-01-20',
+          fileUrl: '#',
+          size: '3.1 MB'
         }
       ]
     },
     {
       id: '2',
-      name: 'Thermodynamics',
-      course: 'Mechanical Engineering',
-      semester: '4',
+      name: 'Database Management Systems',
+      code: 'CSE2004',
+      isExpanded: false,
       files: [
         {
-          id: '2-1',
-          title: 'Thermodynamics Complete Guide',
-          uploadedBy: 'Dr. Patel',
-          uploadDate: '2025-02-22',
-          downloads: 89,
-          fileSize: '3.7 MB',
-          fileType: 'PDF'
+          id: '3',
+          name: 'SQL Basics.pdf',
+          uploader: 'Dr. Priya Venkat',
+          uploadDate: '2025-02-05',
+          fileUrl: '#',
+          size: '1.8 MB'
         }
       ]
     },
     {
       id: '3',
-      name: 'Database Management',
-      course: 'Computer Science',
-      semester: '5',
+      name: 'Computer Networks',
+      code: 'CSE3001',
+      isExpanded: false,
       files: [
         {
-          id: '3-1',
-          title: 'DBMS Tutorial & Sample Questions',
-          uploadedBy: 'Prof. Kumar',
-          uploadDate: '2025-03-01',
-          downloads: 156,
-          fileSize: '1.8 MB',
-          fileType: 'PDF'
+          id: '4',
+          name: 'TCP/IP Protocol.pdf',
+          uploader: 'Dr. Ramesh Kumar',
+          uploadDate: '2025-02-10',
+          fileUrl: '#',
+          size: '2.2 MB'
         }
       ]
     }
   ]);
-  
-  const [newNote, setNewNote] = useState({
-    title: '',
-    subject: '',
-    course: '',
-    semester: '',
-    uploadedBy: '',
-    uploadDate: new Date().toISOString().split('T')[0],
-    fileSize: '',
-    fileType: 'PDF',
-    existingSubjectId: ''
+
+  const [newSubject, setNewSubject] = useState({
+    name: '',
+    code: ''
   });
 
-  const [isAddingToExisting, setIsAddingToExisting] = useState(false);
-  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
+  const [uploadInfo, setUploadInfo] = useState({
+    subjectId: '',
+    file: null as File | null,
+    filePreview: ''
+  });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const [fileUploadDialog, setFileUploadDialog] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewNote(prev => ({ ...prev, [name]: value }));
+    setNewSubject(prev => ({ ...prev, [name]: value }));
   };
 
-  const toggleSubjectExpand = (subjectId: string) => {
-    setExpandedSubjects(prev => ({
+  const addSubject = () => {
+    if (!newSubject.name || !newSubject.code) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newSubjectWithId = {
+      ...newSubject,
+      id: Date.now().toString(),
+      files: [],
+      isExpanded: false
+    };
+
+    setSubjects(prev => [...prev, newSubjectWithId]);
+    setOpenDialog(false);
+    setNewSubject({
+      name: '',
+      code: ''
+    });
+
+    toast({
+      title: "Subject Added",
+      description: `${newSubject.name} has been added successfully`,
+    });
+  };
+
+  const toggleExpand = (id: string) => {
+    setSubjects(prev => 
+      prev.map(subject => 
+        subject.id === id 
+          ? { ...subject, isExpanded: !subject.isExpanded } 
+          : subject
+      )
+    );
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadInfo(prev => ({
+        ...prev,
+        file,
+        filePreview: URL.createObjectURL(file)
+      }));
+    }
+  };
+
+  const handleCameraCapture = (file: File) => {
+    setUploadInfo(prev => ({
       ...prev,
-      [subjectId]: !prev[subjectId]
+      file,
+      filePreview: URL.createObjectURL(file)
     }));
   };
 
-  const addNote = () => {
-    if (isAddingToExisting) {
-      if (!newNote.existingSubjectId || !newNote.title) {
-        toast({
-          title: "Missing Information",
-          description: "Please select a subject and provide a title",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const newFile = {
-        id: `${Date.now()}`,
-        title: newNote.title,
-        uploadedBy: newNote.uploadedBy,
-        uploadDate: newNote.uploadDate,
-        downloads: 0,
-        fileSize: newNote.fileSize,
-        fileType: newNote.fileType
-      };
-
-      setSubjects(prev => prev.map(subject => 
-        subject.id === newNote.existingSubjectId
-          ? { ...subject, files: [...subject.files, newFile] }
-          : subject
-      ));
-
-    } else {
-      if (!newNote.subject || !newNote.course || !newNote.title) {
-        toast({
-          title: "Missing Information",
-          description: "Please fill in all required fields",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const newSubject = {
-        id: `${Date.now()}`,
-        name: newNote.subject,
-        course: newNote.course,
-        semester: newNote.semester,
-        files: [{
-          id: `${Date.now()}-1`,
-          title: newNote.title,
-          uploadedBy: newNote.uploadedBy,
-          uploadDate: newNote.uploadDate,
-          downloads: 0,
-          fileSize: newNote.fileSize,
-          fileType: newNote.fileType
-        }]
-      };
-
-      setSubjects(prev => [...prev, newSubject]);
+  const uploadFile = () => {
+    if (!uploadInfo.subjectId || !uploadInfo.file) {
+      toast({
+        title: "Missing Information",
+        description: "Please select both a subject and a file",
+        variant: "destructive",
+      });
+      return;
     }
 
-    setOpenDialog(false);
-    setNewNote({
-      title: '',
-      subject: '',
-      course: '',
-      semester: '',
-      uploadedBy: '',
+    // Create a new file entry
+    const newFile: NoteFile = {
+      id: Date.now().toString(),
+      name: uploadInfo.file.name,
+      uploader: profileType === 'faculty' ? 'Faculty' : 'Student',
       uploadDate: new Date().toISOString().split('T')[0],
-      fileSize: '',
-      fileType: 'PDF',
-      existingSubjectId: ''
-    });
-    setIsAddingToExisting(false);
+      fileUrl: URL.createObjectURL(uploadInfo.file),
+      size: `${(uploadInfo.file.size / (1024 * 1024)).toFixed(1)} MB`
+    };
 
-    toast({
-      title: "Note Added",
-      description: "Your academic note has been added successfully",
-    });
-  };
-
-  const handleDownload = (subjectId: string, fileId: string) => {
-    // Update the download count for the specific file
+    // Add the file to the correct subject
     setSubjects(prev => 
       prev.map(subject => 
-        subject.id === subjectId
-          ? {
-              ...subject,
-              files: subject.files.map(file => 
-                file.id === fileId
-                  ? { ...file, downloads: file.downloads + 1 }
-                  : file
-              )
+        subject.id === uploadInfo.subjectId
+          ? { 
+              ...subject, 
+              files: [...subject.files, newFile],
+              isExpanded: true // Auto-expand to show the new file
             }
           : subject
       )
     );
     
+    setFileUploadDialog(false);
+    
+    // Reset upload info
+    setUploadInfo({
+      subjectId: '',
+      file: null,
+      filePreview: ''
+    });
+
     toast({
-      title: "Download Started",
-      description: "Your file is downloading...",
+      title: "File Uploaded",
+      description: "The file has been uploaded successfully",
     });
   };
-
-  const filteredSubjects = searchTerm 
-    ? subjects.filter(subject => 
-        subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        subject.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        subject.files.some(file => 
-          file.title.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      )
-    : subjects;
 
   return (
     <div className="vnex-container py-12">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-2">
-            <BookOpen className="w-8 h-8 text-primary-600" />
+            <Book className="w-8 h-8 text-primary-600" />
             <h1 className="text-3xl font-bold">Academic Notes</h1>
           </div>
           
-          <Button 
-            onClick={() => setOpenDialog(true)}
-            className="flex items-center gap-2"
-          >
-            <Upload className="h-4 w-4" />
-            Upload Notes
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={() => setFileUploadDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Notes
+            </Button>
+            
+            {profileType === 'faculty' && (
+              <Button 
+                onClick={() => setOpenDialog(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Subject
+              </Button>
+            )}
+          </div>
         </div>
 
-        {!campus && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-            <p className="text-yellow-700">
-              Please select a campus in your profile to see academic notes for your campus.
-            </p>
-          </div>
-        )}
-        
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search by subject, course or note title..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        </div>
-        
-        {filteredSubjects.length === 0 ? (
+        {subjects.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-600">No notes found</h3>
+            <Book className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-gray-600">No subjects available</h3>
             <p className="text-gray-500 mt-2">
-              {searchTerm 
-                ? 'No notes match your search criteria.' 
-                : 'There are no academic notes available yet.'}
+              {profileType === 'faculty' 
+                ? 'Click "Add Subject" to create a new subject.' 
+                : 'No subjects have been added yet.'}
             </p>
           </div>
         ) : (
-          <div className="grid gap-6">
-            {filteredSubjects.map(subject => (
-              <Collapsible 
-                key={subject.id} 
-                open={expandedSubjects[subject.id]} 
-                onOpenChange={() => toggleSubjectExpand(subject.id)}
-                className="vnex-card hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start">
+          <div className="space-y-4">
+            {subjects.map(subject => (
+              <div key={subject.id} className="vnex-card">
+                <div 
+                  className="flex items-center justify-between cursor-pointer"
+                  onClick={() => toggleExpand(subject.id)}
+                >
                   <div>
                     <h2 className="text-xl font-semibold">{subject.name}</h2>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <span className="bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full text-sm font-medium">
-                        {subject.course}
-                      </span>
-                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-sm font-medium">
-                        Semester {subject.semester}
-                      </span>
-                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-sm font-medium">
-                        {subject.files.length} {subject.files.length === 1 ? 'file' : 'files'}
-                      </span>
-                    </div>
+                    <p className="text-gray-500">{subject.code}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsAddingToExisting(true);
-                        setNewNote(prev => ({ ...prev, existingSubjectId: subject.id }));
-                        setOpenDialog(true);
-                      }}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Note
-                    </Button>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        {expandedSubjects[subject.id] ? 
-                          <ChevronUp className="h-4 w-4" /> : 
-                          <ChevronDown className="h-4 w-4" />
-                        }
-                      </Button>
-                    </CollapsibleTrigger>
+                  <div className="flex items-center">
+                    <span className="text-gray-500 mr-2">{subject.files.length} files</span>
+                    {subject.isExpanded ? (
+                      <ChevronUp className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-gray-500" />
+                    )}
                   </div>
                 </div>
                 
-                <CollapsibleContent>
-                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
-                    {subject.files.map(file => (
-                      <div key={file.id} className="p-4 bg-gray-50 rounded-md">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-medium">{file.title}</h3>
-                            <div className="mt-1 text-sm text-gray-500">
-                              Uploaded by {file.uploadedBy} on {new Date(file.uploadDate).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleDownload(subject.id, file.id)}
-                            className="flex items-center gap-1"
-                          >
-                            <Download className="h-4 w-4" />
-                            Download
-                          </Button>
-                        </div>
-                        <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                          <span>{file.fileType} · {file.fileSize}</span>
-                          <span>{file.downloads} downloads</span>
-                        </div>
-                      </div>
-                    ))}
+                {subject.isExpanded && subject.files.length > 0 && (
+                  <div className="mt-4 border-t pt-4">
+                    <div className="rounded-lg border overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              File Name
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Uploaded By
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Size
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {subject.files.map(file => (
+                            <tr key={file.id}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <File className="h-5 w-5 text-primary-500 mr-2" />
+                                  <span className="text-sm font-medium text-gray-900">{file.name}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {file.uploader}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {file.uploadDate}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {file.size}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a 
+                                  href={file.fileUrl} 
+                                  download 
+                                  className="text-primary-600 hover:text-primary-900 flex items-center justify-end"
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Download
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+                )}
+                
+                {subject.isExpanded && subject.files.length === 0 && (
+                  <div className="mt-4 border-t pt-4 text-center py-6">
+                    <File className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No files have been uploaded for this subject yet.</p>
+                    <Button 
+                      onClick={() => {
+                        setUploadInfo(prev => ({ ...prev, subjectId: subject.id }));
+                        setFileUploadDialog(true);
+                      }}
+                      variant="outline" 
+                      className="mt-2"
+                    >
+                      Upload Now
+                    </Button>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Upload Note Dialog */}
+      {/* Add Subject Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {isAddingToExisting ? "Add Note to Existing Subject" : "Upload New Academic Notes"}
-            </DialogTitle>
+            <DialogTitle>Add New Subject</DialogTitle>
             <DialogDescription>
-              Share your notes and study materials with other students.
+              Create a new subject for academic notes.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            {isAddingToExisting ? (
-              <div>
-                <Label>Selected Subject</Label>
-                <div className="mt-1 p-2 bg-gray-50 rounded-md">
-                  {subjects.find(s => s.id === newNote.existingSubjectId)?.name || "Select a subject"}
-                </div>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <Label htmlFor="subject">Subject Name *</Label>
-                  <Input
-                    id="subject"
-                    name="subject"
-                    value={newNote.subject}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Machine Learning"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="course">Course *</Label>
-                    <Input
-                      id="course"
-                      name="course"
-                      value={newNote.course}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Computer Science"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="semester">Semester</Label>
-                    <select
-                      id="semester"
-                      name="semester"
-                      value={newNote.semester}
-                      onChange={handleInputChange}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">Select Semester</option>
-                      <option value="1">Semester 1</option>
-                      <option value="2">Semester 2</option>
-                      <option value="3">Semester 3</option>
-                      <option value="4">Semester 4</option>
-                      <option value="5">Semester 5</option>
-                      <option value="6">Semester 6</option>
-                      <option value="7">Semester 7</option>
-                      <option value="8">Semester 8</option>
-                    </select>
-                  </div>
-                </div>
-              </>
-            )}
-            
             <div>
-              <Label htmlFor="title">Note Title *</Label>
+              <Label htmlFor="name">Subject Name</Label>
               <Input
-                id="title"
-                name="title"
-                value={newNote.title}
+                id="name"
+                name="name"
+                value={newSubject.name}
                 onChange={handleInputChange}
-                placeholder="e.g., Machine Learning Basics"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">  
-              <div>
-                <Label htmlFor="fileType">File Type</Label>
-                <select
-                  id="fileType"
-                  name="fileType"
-                  value={newNote.fileType}
-                  onChange={handleInputChange}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="PDF">PDF</option>
-                  <option value="DOCX">DOCX</option>
-                  <option value="PPT">PPT</option>
-                  <option value="ZIP">ZIP</option>
-                </select>
-              </div>
-              
-              <div>
-                <Label htmlFor="uploadedBy">Uploaded By</Label>
-                <Input
-                  id="uploadedBy"
-                  name="uploadedBy"
-                  value={newNote.uploadedBy}
-                  onChange={handleInputChange}
-                  placeholder="Your Name"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="fileSize">File Size</Label>
-              <Input
-                id="fileSize"
-                name="fileSize"
-                value={newNote.fileSize}
-                onChange={handleInputChange}
-                placeholder="e.g., 2.4 MB"
+                placeholder="e.g., Data Structures and Algorithms"
               />
             </div>
             
             <div>
-              <Label htmlFor="fileUpload">Upload File *</Label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                <div className="space-y-1 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="fileUpload"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500"
-                    >
-                      <span>Upload a file</span>
-                      <input id="fileUpload" name="fileUpload" type="file" className="sr-only" />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    PDF, DOC, DOCX, PPT, PPTX up to 10MB
-                  </p>
-                </div>
-              </div>
+              <Label htmlFor="code">Subject Code</Label>
+              <Input
+                id="code"
+                name="code"
+                value={newSubject.code}
+                onChange={handleInputChange}
+                placeholder="e.g., CSE2003"
+              />
             </div>
           </div>
           
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setOpenDialog(false);
-                setIsAddingToExisting(false);
-              }}
-            >
+            <Button variant="outline" onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button onClick={addSubject}>Add Subject</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Upload Dialog */}
+      <Dialog open={fileUploadDialog} onOpenChange={setFileUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Notes</DialogTitle>
+            <DialogDescription>
+              Upload notes for a specific subject.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="subject">Subject</Label>
+              <select
+                id="subject"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                value={uploadInfo.subjectId}
+                onChange={(e) => setUploadInfo(prev => ({ ...prev, subjectId: e.target.value }))}
+              >
+                <option value="">Select a subject</option>
+                {subjects.map(subject => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.name} ({subject.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <Label>Upload Method</Label>
+              <div className="flex gap-2 mt-2">
+                <div className="flex-1">
+                  <Label 
+                    htmlFor="file-upload" 
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                      <p className="text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        PDF, DOC, PPT, etc.
+                      </p>
+                    </div>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </Label>
+                </div>
+                
+                <div className="flex items-center justify-center">
+                  <span className="text-gray-500">OR</span>
+                </div>
+                
+                <div className="flex-1 flex items-center justify-center">
+                  <CameraCapture onImageCapture={handleCameraCapture} buttonText="Capture Document" />
+                </div>
+              </div>
+            </div>
+            
+            {uploadInfo.filePreview && (
+              <div>
+                <Label>Selected File</Label>
+                <div className="mt-2 p-2 border rounded-md">
+                  <div className="flex items-center">
+                    <File className="h-8 w-8 text-primary-500 mr-2" />
+                    <div>
+                      <p className="font-medium">{uploadInfo.file?.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {uploadInfo.file && 
+                          `${(uploadInfo.file.size / (1024 * 1024)).toFixed(2)} MB`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setFileUploadDialog(false);
+              setUploadInfo({
+                subjectId: '',
+                file: null,
+                filePreview: ''
+              });
+            }}>
               Cancel
             </Button>
-            <Button onClick={addNote}>Upload Notes</Button>
+            <Button 
+              onClick={uploadFile}
+              disabled={!uploadInfo.subjectId || !uploadInfo.file}
+            >
+              Upload
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
