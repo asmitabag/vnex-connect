@@ -1,9 +1,16 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Home, MessageSquare, MapPin, Search, Car, Calendar, Book, Dog } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
+  
+  const handleExternalLink = (url) => {
+    // Navigate to external URL
+    window.location.href = url;
+  };
+
   const features = [
     {
       icon: <MessageSquare className="w-12 h-12 text-primary-600" />,
@@ -56,7 +63,7 @@ const Index = () => {
     },
     {
       icon: <Calendar className="w-12 h-12 text-primary-600" />,
-      title: 'College Events',
+      title: 'Events',
       description: 'Stay updated with upcoming events, fests, and activities organized by various clubs.',
       link: '/events',
       color: 'bg-purple-50',
@@ -119,6 +126,12 @@ const Index = () => {
             <p className="text-lg text-gray-600 mb-8">
               Join VIT Nexus today and connect with solutions to make your college life easier and better.
             </p>
+            <button 
+              onClick={() => handleExternalLink('https://vitchennaievents.com/conf1/')}
+              className="vnex-button-primary"
+            >
+              Register Here
+            </button>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 
 interface CameraCaptureProps {
   onImageCapture: (imageFile: File) => void;
@@ -16,6 +16,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -36,6 +37,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   const startCamera = async () => {
     try {
+      setError(null);
       const constraints = { 
         video: { 
           facingMode: 'environment',
@@ -59,13 +61,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
               })
               .catch(err => {
                 console.error("Error playing video:", err);
+                setError("Failed to play video stream. Please check your camera permissions.");
               });
           }
         };
       }
     } catch (err) {
       console.error("Error accessing camera:", err);
-      alert("Unable to access camera. Please ensure you've granted camera permissions.");
+      setError("Unable to access camera. Please ensure you've granted camera permissions.");
     }
   };
 
@@ -121,6 +124,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   const handleOpenDialog = () => {
     setShowCamera(true);
+    setCapturedImage(null);
+    setError(null);
   };
 
   const handleCloseDialog = () => {
@@ -147,29 +152,42 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Take a Photo</DialogTitle>
+            <DialogDescription>
+              Use your camera to take a photo to upload
+            </DialogDescription>
           </DialogHeader>
           
           <div className="flex flex-col items-center">
             {!capturedImage ? (
-              <div className="relative w-full">
+              <div className="relative w-full bg-black rounded-md overflow-hidden">
                 <video 
                   ref={videoRef} 
-                  className="w-full h-auto rounded-md border border-gray-200" 
+                  className="w-full h-auto" 
                   autoPlay 
                   playsInline
                 />
-                {!cameraActive && (
+                {!cameraActive && !error && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white">
-                    Loading camera...
+                    <div className="text-center p-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                      <p>Loading camera...</p>
+                    </div>
+                  </div>
+                )}
+                {error && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white">
+                    <div className="text-center p-4">
+                      <p className="text-red-400">{error}</p>
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="w-full">
+              <div className="w-full bg-black rounded-md overflow-hidden">
                 <img 
                   src={capturedImage} 
-                  alt="Captured" 
-                  className="w-full h-auto rounded-md border border-gray-200" 
+                  alt="Captured photo" 
+                  className="w-full h-auto" 
                 />
               </div>
             )}

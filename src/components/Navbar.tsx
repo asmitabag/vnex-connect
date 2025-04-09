@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, BookOpen, Home, MessageSquare, MapPin, Search, Car, Calendar, MapPinOff, Building, AlertCircle } from 'lucide-react';
 import ProfileSelector from './ProfileSelector';
 import { useProfile } from '../contexts/ProfileContext';
@@ -8,9 +8,30 @@ import { useProfile } from '../contexts/ProfileContext';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { profileType } = useProfile();
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  // Tab color mapping with professional color choices
+  const getTabColor = (path) => {
+    const colorMap = {
+      '/': 'text-primary-600 hover:text-primary-800',
+      '/hostel-complaints': 'text-blue-600 hover:text-blue-800',
+      '/mess-complaints': 'text-emerald-600 hover:text-emerald-800',
+      '/stray-animal': 'text-amber-600 hover:text-amber-800',
+      '/medical-emergency': 'text-red-600 hover:text-red-800',
+      '/places-nearby': 'text-indigo-600 hover:text-indigo-800',
+      '/lost-found': 'text-orange-600 hover:text-orange-800',
+      '/cab-partner': 'text-cyan-600 hover:text-cyan-800',
+      '/academic-notes': 'text-violet-600 hover:text-violet-800',
+      '/events': 'text-rose-600 hover:text-rose-800',
+    };
+    
+    return location.pathname === path 
+      ? `${colorMap[path]} font-medium` 
+      : 'text-gray-700 hover:' + (colorMap[path] || 'text-primary-600');
   };
 
   // Filter nav items based on profile type
@@ -57,7 +78,7 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
+                className={`flex items-center space-x-1 transition-colors ${getTabColor(item.path)}`}
               >
                 {item.icon}
                 <span>{item.name}</span>
@@ -73,7 +94,7 @@ const Navbar = () => {
                     <Link
                       key={item.name}
                       to={item.path}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600"
+                      className={`flex items-center space-x-2 px-4 py-2 text-sm hover:bg-gray-50 ${getTabColor(item.path)}`}
                     >
                       {item.icon}
                       <span>{item.name}</span>
@@ -106,7 +127,7 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-md"
+                className={`flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-md ${getTabColor(item.path)}`}
                 onClick={() => setIsOpen(false)}
               >
                 {item.icon}
