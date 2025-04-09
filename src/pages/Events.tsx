@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 // Define campus-specific venues - updated with more realistic academic venues
 const campusVenues = {
@@ -78,7 +79,10 @@ interface Event {
 const Events = () => {
   const { profileType, campus } = useProfile();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
+  
+  // Updated sample events with campus venues
   const [events, setEvents] = useState<Event[]>([
     {
       id: '1',
@@ -86,8 +90,8 @@ const Events = () => {
       description: 'Annual technical symposium featuring competitions, workshops, and guest lectures.',
       date: getFutureDate(30), // 30 days from now, in 2025
       time: '09:00 AM',
-      venue: 'Main Auditorium',
-      registrationLink: 'https://events.vit.ac.in/register',
+      venue: 'MG Auditorium',
+      registrationLink: 'https://vitchennaievents.com/conf1/',
       organizer: 'School of Computer Science',
       studentCoordinator: 'Rahul Sharma',
       studentContact: '9876543210',
@@ -102,7 +106,7 @@ const Events = () => {
       date: getFutureDate(60), // 60 days from now, in 2025
       time: '05:00 PM',
       venue: 'Open Air Theatre',
-      registrationLink: 'https://events.vit.ac.in/register',
+      registrationLink: 'https://vitchennaievents.com/conf1/',
       organizer: 'Student Cultural Committee',
       studentCoordinator: 'Ananya Patel',
       studentContact: '8765432109',
@@ -169,6 +173,12 @@ const Events = () => {
       title: "Event Added",
       description: "The event has been added successfully",
     });
+  };
+
+  // Handle external navigation
+  const handleExternalNavigation = (url: string) => {
+    // For external links, we need to directly navigate to avoid the SPA router
+    window.location.href = url;
   };
 
   return (
@@ -251,8 +261,10 @@ const Events = () => {
                     </h3>
                     <a 
                       href={event.registrationLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleExternalNavigation(event.registrationLink);
+                      }}
                       className="text-primary-600 hover:underline flex items-center gap-1"
                     >
                       Register Here
